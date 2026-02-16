@@ -1,1 +1,7 @@
+# Vs code config folders
 .vscode
+
+
+#* Other files
+BACKEND_DATA_REQUIREMENTS.*
+*.pdf
