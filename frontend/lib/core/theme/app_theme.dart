@@ -1,45 +1,42 @@
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'app_colors.dart';
+import 'app_typography.dart';
 
-//& Color Definitions
-class AppColors {
-  static const Color primary = Color(0xFF123456);
-  static const Color darkPanelCard = Color(0xFF234567);
-  static const Color darkPrimaryText = Color(0xFFFFFFFF);
-  static const Color lightSurfaceCard = Color(0xFFF1F2F3);
-  static const Color lightPrimaryText = Color(0xFF000000);
+//& AppTheme Class
+class AppTheme {
+  
+  //& Light Theme
+  static ThemeData get lightTheme {
+    return ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: AppColors.lightBackground,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.primary,
+        surface: AppColors.lightSurfaceCard,
+        onSurface: AppColors.lightPrimaryText,
+      ),
+      textTheme: TextTheme(
+        //* Map your custom bold style to a valid Material 3 field
+        labelSmall: AppTypography.captionBold, 
+      ),
+    );
+  }
+
+  //& Dark Theme
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: AppColors.darkBase,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.primary,
+        surface: AppColors.darkPanelCard,
+        onSurface: AppColors.darkPrimaryText,
+      ),
+      textTheme: TextTheme(
+        labelSmall: AppTypography.captionBold,
+      ),
+    );
+  }
 }
-
-//& Typography Definitions
-class AppTypography {
-  static final TextStyle captionBold = GoogleFonts.lato(
-    fontSize: 12.0,
-    fontWeight: FontWeight.bold,
-  );
-}
-
-//& Theme Definitions
-final ThemeData lightTheme = ThemeData(
-  //* Explicit light color scheme from design tokens
-  colorScheme: const ColorScheme.light(
-    primary: AppColors.primary,
-    surface: AppColors.lightSurfaceCard,
-    onSurface: AppColors.lightPrimaryText,
-  ),
-  textTheme: TextTheme(
-    captionBold: AppTypography.captionBold,
-  ),
-);
-
-final ThemeData darkTheme = ThemeData(
-  //* Explicit dark color scheme from design tokens
-  colorScheme: const ColorScheme.dark(
-    primary: AppColors.primary,
-    surface: AppColors.darkPanelCard,
-    onSurface: AppColors.darkPrimaryText,
-  ),
-  textTheme: TextTheme(
-    captionBold: AppTypography.captionBold,
-  ),
-);

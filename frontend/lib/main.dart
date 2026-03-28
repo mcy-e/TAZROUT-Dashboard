@@ -21,6 +21,7 @@ void main() {
 
 //& TazroutApp Widget
 class TazroutApp extends StatelessWidget {
+  const TazroutApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
