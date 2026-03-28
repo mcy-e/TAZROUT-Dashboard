@@ -28,12 +28,17 @@ class TazroutApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       title: 'Tazrout',
+      //* Default to dark theme as per design spec
+      themeMode: ThemeMode.dark,
     );
   }
 }
 
 //& HomeShell Stub
 class HomeShell extends StatelessWidget {
+  //? Temporary placeholder  will be replaced by NavigationShell
+  const HomeShell({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

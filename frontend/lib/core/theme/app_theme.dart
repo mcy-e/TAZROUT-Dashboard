@@ -1,63 +1,45 @@
 //& Imports
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
-import 'app_typography.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-//& AppTheme Class
-class AppTheme {
-  
-  //& Light Theme
-  static ThemeData get lightTheme {
-    return ThemeData(
-      primaryColor: AppColors.primary,
-      colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-      cardTheme: CardTheme(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        elevation: 2.0,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-      ),
-      textTheme: TextTheme(
-        displayLarge: AppTypography.displayXL,
-        displayMedium: AppTypography.displayL,
-        headlineMedium: AppTypography.headingM,
-        headlineSmall: AppTypography.headingS,
-        bodyLarge: AppTypography.bodyLBold,
-        bodyMedium: AppTypography.bodyMBold,
-        bodySmall: AppTypography.bodySMedium,
-        caption: AppTypography.captionBold,
-      ),
-    );
-  }
-
-  //& Dark Theme
-  static ThemeData get darkTheme {
-    return ThemeData(
-      brightness: Brightness.dark,
-      primaryColor: AppColors.primaryDark,
-      colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primaryDark),
-      cardTheme: CardTheme(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        elevation: 2.0,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
-        ),
-      ),
-      textTheme: TextTheme(
-        displayLarge: AppTypography.displayXL,
-        displayMedium: AppTypography.displayL,
-        headlineMedium: AppTypography.headingM,
-        headlineSmall: AppTypography.headingS,
-        bodyLarge: AppTypography.bodyLBold,
-        bodyMedium: AppTypography.bodyMBold,
-        bodySmall: AppTypography.bodySMedium,
-        caption: AppTypography.captionBold,
-      ),
-    );
-  }
+//& Color Definitions
+class AppColors {
+  static const Color primary = Color(0xFF123456);
+  static const Color darkPanelCard = Color(0xFF234567);
+  static const Color darkPrimaryText = Color(0xFFFFFFFF);
+  static const Color lightSurfaceCard = Color(0xFFF1F2F3);
+  static const Color lightPrimaryText = Color(0xFF000000);
 }
+
+//& Typography Definitions
+class AppTypography {
+  static final TextStyle captionBold = GoogleFonts.lato(
+    fontSize: 12.0,
+    fontWeight: FontWeight.bold,
+  );
+}
+
+//& Theme Definitions
+final ThemeData lightTheme = ThemeData(
+  //* Explicit light color scheme from design tokens
+  colorScheme: const ColorScheme.light(
+    primary: AppColors.primary,
+    surface: AppColors.lightSurfaceCard,
+    onSurface: AppColors.lightPrimaryText,
+  ),
+  textTheme: TextTheme(
+    captionBold: AppTypography.captionBold,
+  ),
+);
+
+final ThemeData darkTheme = ThemeData(
+  //* Explicit dark color scheme from design tokens
+  colorScheme: const ColorScheme.dark(
+    primary: AppColors.primary,
+    surface: AppColors.darkPanelCard,
+    onSurface: AppColors.darkPrimaryText,
+  ),
+  textTheme: TextTheme(
+    captionBold: AppTypography.captionBold,
+  ),
+);
