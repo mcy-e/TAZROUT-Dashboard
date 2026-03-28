@@ -9,5 +9,3 @@ abstract class AppTypography {
     fontWeight: FontWeight.bold,
   );
 }
-
-

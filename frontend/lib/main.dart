@@ -21,7 +21,9 @@ void main() {
 
 //& TazroutApp Widget
 class TazroutApp extends StatelessWidget {
+  // Constructor for TazroutApp
   const TazroutApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -29,7 +31,7 @@ class TazroutApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       title: 'Tazrout',
-      //* Default to dark theme as per design spec
+      // Default to dark theme as per design spec
       themeMode: ThemeMode.dark,
     );
   }

@@ -17,7 +17,6 @@ class AppTheme {
         onSurface: AppColors.lightPrimaryText,
       ),
       textTheme: TextTheme(
-        //* Map your custom bold style to a valid Material 3 field
         labelSmall: AppTypography.captionBold, 
       ),
     );
