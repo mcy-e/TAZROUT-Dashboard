@@ -4,4 +4,4 @@
 
 #* Other files
 BACKEND_DATA_REQUIREMENTS.*
-*.pdf
+docs/*.pdf
