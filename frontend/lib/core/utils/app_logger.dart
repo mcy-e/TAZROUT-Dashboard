@@ -7,7 +7,6 @@
 import 'dart:io';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 
 //& Log Level Enum
@@ -17,25 +16,44 @@ enum LogLevel { debug, info, warning, error, critical }
 //& AppLogger Class
 class AppLogger {
   //& Configuration
-  //? Log file saved to app documents directory as tazrout.log
-  //? File is appended, not overwritten, on each session
+  //? Log file saved next to the running executable.
   //* Max log file size before rotation: 1MB
   static const String _logFileName = 'tazrout.log';
   static const int _maxFileSizeBytes = 1024 * 1024;
 
-  //& Prefix Convention
-  static String _getLevelPrefix(LogLevel level) {
+  //& ANSI color constants
+  static const String _reset  = '\x1B[0m';
+  static const String _grey   = '\x1B[90m';   //? DEBUG
+  static const String _cyan   = '\x1B[36m';   //? INFO
+  static const String _yellow = '\x1B[33m';   //? WARN
+  static const String _red    = '\x1B[31m';   //? ERROR
+  static const String _redBold = '\x1B[1;31m'; //? CRITICAL
+  static const String _green  = '\x1B[32m';   //? THEME
+  static const String _blue   = '\x1B[34m';   //? NAV
+  static const String _magenta = '\x1B[35m';  //? NET
+  static const String _white  = '\x1B[37m';   //? STATE
+
+  //& Prefix Mapping
+  //* Map each level to its color and plain text label
+  static String _prefix(LogLevel level) {
     switch (level) {
-      case LogLevel.debug:
-        return '[DEBUG]    🔍';
-      case LogLevel.info:
-        return '[INFO]     ✅';
-      case LogLevel.warning:
-        return '[WARN]     ⚠️';
-      case LogLevel.error:
-        return '[ERROR]    ❌';
-      case LogLevel.critical:
-        return '[CRITICAL] 🔥';
+      case LogLevel.debug:    return '${_grey}[DEBUG]   $_reset';
+      case LogLevel.info:     return '${_cyan}[INFO]    $_reset';
+      case LogLevel.warning:  return '${_yellow}[WARN]    $_reset';
+      case LogLevel.error:    return '${_red}[ERROR]   $_reset';
+      case LogLevel.critical: return '${_redBold}[CRITICAL]$_reset';
+    }
+  }
+
+  //& Tag Color Mapping
+  //* Domain tag colors
+  static String _tagColor(String tag) {
+    switch (tag) {
+      case 'THEME': return _green;
+      case 'NAV':   return _blue;
+      case 'NET':   return _magenta;
+      case 'STATE': return _white;
+      default:      return _cyan;
     }
   }
 
@@ -44,12 +62,14 @@ class AppLogger {
   //* Format: [LEVEL] HH:MM:SS.mmm | TAG | message
   static void _log(LogLevel level, String tag, String message, [Object? error, StackTrace? stackTrace]) {
     final timestamp = DateFormat('HH:mm:ss.SSS').format(DateTime.now());
-    final prefix = _getLevelPrefix(level);
-    final logLine = '$prefix $timestamp | $tag | $message';
+    
+    final line =
+      '${_prefix(level)}${_grey}${timestamp}$_reset '
+      '${_tagColor(tag)}[$tag]$_reset $message';
 
     if (kDebugMode) {
       dev.log(
-        logLine,
+        line,
         name: tag,
         time: DateTime.now(),
         level: _getDevLogLevel(level),
@@ -58,7 +78,9 @@ class AppLogger {
       );
     }
 
-    _writeToFile(logLine + (error != null ? ' | Error: $error' : ''));
+    //* Strip ANSI codes for file output — keep terminal output colored
+    final plainLine = line.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
+    _writeToFile(plainLine + (error != null ? ' | Error: $error' : ''));
   }
 
   static int _getDevLogLevel(LogLevel level) {
@@ -94,33 +116,34 @@ class AppLogger {
 
   //* Theme resolution — logs which color token was applied and in which mode
   static void theme(String token, String hexValue, String mode) =>
-    _log(LogLevel.debug, 'THEME', '🎨 $token → $hexValue ($mode)');
+    _log(LogLevel.debug, 'THEME', '$token → $hexValue ($mode)');
 
   //* Navigation events
   static void nav(String from, String to) =>
-    _log(LogLevel.info, 'NAV', '🧭 $from → $to');
+    _log(LogLevel.info, 'NAV', '$from → $to');
 
   //* API calls
   static void net(String method, String endpoint, int? statusCode) =>
-    _log(LogLevel.info, 'NET', '🌐 $method $endpoint ${statusCode ?? "pending"}');
+    _log(LogLevel.info, 'NET', '$method $endpoint ${statusCode ?? "pending"}');
 
   //* State changes
   static void state(String provider, String change) =>
-    _log(LogLevel.debug, 'STATE', '📦 $provider: $change');
+    _log(LogLevel.debug, 'STATE', '$provider: $change');
 
   //& File Writing
-  //* Appends formatted log line to tazrout.log in app documents dir
+  //* Appends formatted log line to tazrout.log next to the executable
   //* Rotates file if size exceeds _maxFileSizeBytes
   static Future<void> _writeToFile(String line) async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/$_logFileName');
+      //* Resolve log path relative to executable — stays inside project
+      final executableDir = File(Platform.resolvedExecutable).parent.path;
+      final file = File('$executableDir/$_logFileName');
 
       if (await file.exists()) {
         final size = await file.length();
         if (size > _maxFileSizeBytes) {
           //* Rotation: Simple rename current to .old and start fresh
-          final oldFile = File('${directory.path}/$_logFileName.old');
+          final oldFile = File('${file.path}.old');
           if (await oldFile.exists()) await oldFile.delete();
           await file.rename(oldFile.path);
         }
