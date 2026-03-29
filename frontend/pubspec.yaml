@@ -19,6 +19,8 @@ dependencies:
   phosphor_flutter: ^2.1.0
   intl: ^0.19.0
   flutter_dotenv: ^5.1.0
+  flutter_svg: ^2.2.4
+  path_provider: ^2.1.2
 
 #& Development Dependencies
 dev_dependencies:
@@ -30,7 +32,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/fonts/
-    - assets/icons/
-    - assets/images/
-    - .env
+      - assets/icons/Dark/svg/
+      - assets/icons/Dark/png/
+      - assets/icons/Light/svg/
+      - assets/icons/Light/png/
+      - assets/images/patterns/svg/
+      - assets/images/patterns/png/
+      - assets/images/berber_icons/svg/
+      - assets/images/berber_icons/png/
+      - assets/images/berber_symbols/svg/
+      - assets/images/berber_symbols/png/
+      - assets/images/berber_typography/svg/
+      - assets/images/berber_typography/png/
+      - .env
