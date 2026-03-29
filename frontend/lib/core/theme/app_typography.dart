@@ -9,6 +9,11 @@ abstract class AppTypography {
     fontWeight: FontWeight.w600,
   );
 
+  static final TextStyle headingS = GoogleFonts.poppins(
+    fontSize: 20.0,
+    fontWeight: FontWeight.bold,
+  );
+
   static final TextStyle headingM = GoogleFonts.poppins(
     fontSize: 24.0,
     fontWeight: FontWeight.bold,
@@ -22,6 +27,16 @@ abstract class AppTypography {
   static final TextStyle bodySRegular = GoogleFonts.lato(
     fontSize: 14.0,
     fontWeight: FontWeight.normal,
+  );
+
+  static final TextStyle bodySMedium = GoogleFonts.lato(
+    fontSize: 14.0,
+    fontWeight: FontWeight.w500,
+  );
+
+  static final TextStyle bodySBold = GoogleFonts.lato(
+    fontSize: 14.0,
+    fontWeight: FontWeight.bold,
   );
 
   static final TextStyle bodyMBold = GoogleFonts.lato(
