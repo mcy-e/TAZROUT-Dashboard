@@ -1,53 +1,37 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-
-//& Router Configuration
-final _router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeShell(),
-    ),
-  ],
-);
+import 'core/utils/app_logger.dart';
 
 //& App Entry Point
-void main() {
+Future<void> main() async {
+  //* Ensure Flutter binding is ready before any async work
+  WidgetsFlutterBinding.ensureInitialized();
+  //* Mark new session in log file
+  await AppLogger.startSession();
+  //* Log app launch
+  AppLogger.info('MAIN', 'Tazrout Dashboard starting...');
   runApp(const ProviderScope(child: TazroutApp()));
 }
 
 //& TazroutApp Widget
 class TazroutApp extends StatelessWidget {
-  // Constructor for TazroutApp
+  //* Constructor for TazroutApp
   const TazroutApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    //* Returns MaterialApp using routerConfig from AppRouter
     return MaterialApp.router(
-      routerConfig: _router,
+      routerConfig: AppRouter.router,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       title: 'Tazrout',
-      // Default to dark theme as per design spec
+      //* Default to dark theme as per design spec
       themeMode: ThemeMode.dark,
-    );
-  }
-}
-
-//& HomeShell Stub
-class HomeShell extends StatelessWidget {
-  //? Temporary placeholder  will be replaced by NavigationShell
-  const HomeShell({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text('Tazrout Shell'),
-      ),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
