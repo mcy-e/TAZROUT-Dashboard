@@ -13,6 +13,9 @@ Future<void> main() async {
   await AppLogger.startSession();
   //* Log app launch
   AppLogger.info('MAIN', 'Tazrout Dashboard starting...');
+  //* Log input type detection
+  // TODO :: Detect touch vs mouse input and log via AppLogger
+  AppLogger.info('INPUT', 'UI initialized for dual input mode');
   runApp(const ProviderScope(child: TazroutApp()));
 }
 

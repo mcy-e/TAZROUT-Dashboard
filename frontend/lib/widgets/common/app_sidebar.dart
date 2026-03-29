@@ -88,75 +88,106 @@ class AppSidebar extends ConsumerWidget {
       ),
     ];
 
-    //* Animated sidebar container
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      width: isExpanded ? 220 : 68,
-      clipBehavior: Clip.hardEdge,
-      color: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.darkSidebar
-          : AppColors.lightSurfaceCard,
-      child: Column(
-        children: [
-          //* Sidebar Header: Logo + Hamburger
-          Container(
-            height: 64,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: isExpanded
-                ? Row(
-                    children: [
-                      //* Logo SVG — expanded state shows full logo with wordmark
-                      SvgPicture.asset(
-                        isDark ? AppAssets.logoDarkDefault : AppAssets.logoLightDefault,
-                        height: 28,
+    //* Animated sidebar container wrapped in ClipRect to prevent overflow painting
+    //* FIX 1: ClipRect eliminates overflow during collapse/expand transition
+    return ClipRect(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        //* FIX 4: Hard constraints prevent sub-pixel width issues during animation
+        constraints: BoxConstraints(
+          minWidth: isExpanded ? 220 : 68,
+          maxWidth: isExpanded ? 220 : 68,
+        ),
+        clipBehavior: Clip.hardEdge,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkSidebar
+            : AppColors.lightSurfaceCard,
+        child: Column(
+          children: [
+            //* Sidebar Header: Logo + Toggle Button
+            //* FIX 3: AnimatedSwitcher transitions between expanded and collapsed header
+            Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: isExpanded
+                    ? Row(
+                        key: const ValueKey('expanded'),
+                        children: [
+                          //* Full logo — expanded state
+                          Flexible(
+                            child: SvgPicture.asset(
+                              isDark
+                                  ? AppAssets.logoDarkDefault
+                                  : AppAssets.logoLightDefault,
+                              height: 28,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const Spacer(),
+                          //* Collapse button
+                          IconButton(
+                            onPressed: () => ref
+                                .read(sidebarExpandedProvider.notifier)
+                                .state = false,
+                            icon: const Icon(Icons.chevron_left),
+                            iconSize: 20,
+                            constraints: const BoxConstraints(
+                                minWidth: 48, minHeight: 48),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        key: const ValueKey('collapsed'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          //* Toggle button — collapsed state
+                          IconButton(
+                            onPressed: () => ref
+                                .read(sidebarExpandedProvider.notifier)
+                                .state = true,
+                            icon: const Icon(Icons.chevron_right),
+                            iconSize: 20,
+                            constraints: const BoxConstraints(
+                                minWidth: 48, minHeight: 48),
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      //* Hamburger toggle button
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () => ref.read(sidebarExpandedProvider.notifier).state = false,
-                      ),
-                    ],
-                  )
-                : //* Collapsed header: icon only, centered
-                  Center(
-                    child: IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () => ref.read(sidebarExpandedProvider.notifier).state = true,
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 16),
-          //* Navigation Items List
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              itemCount: navItems.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 4),
-              itemBuilder: (context, index) {
-                final item = navItems[index];
-                final isActive = currentRoute == item.route;
-
-                return _SidebarNavItem(
-                  item: item,
-                  isExpanded: isExpanded,
-                  isActive: isActive,
-                  showEmergencyBadge: item.isEmergency && hasEmergency,
-                );
-              },
+              ),
             ),
-          ),
-          //* Bottom Spacer
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 16),
+            //* Navigation Items List
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                itemCount: navItems.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 4),
+                itemBuilder: (context, index) {
+                  final item = navItems[index];
+                  final isActive = currentRoute == item.route;
+
+                  return _SidebarNavItem(
+                    item: item,
+                    isExpanded: isExpanded,
+                    isActive: isActive,
+                    showEmergencyBadge: item.isEmergency && hasEmergency,
+                  );
+                },
+              ),
+            ),
+            //* Bottom Spacer
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
 }
 
 //& _SidebarNavItem Class
-class _SidebarNavItem extends StatelessWidget {
+class _SidebarNavItem extends StatefulWidget {
   final _NavItem item;
   final bool isExpanded;
   final bool isActive;
@@ -170,37 +201,53 @@ class _SidebarNavItem extends StatelessWidget {
   });
 
   @override
+  State<_SidebarNavItem> createState() => _SidebarNavItemState();
+}
+
+class _SidebarNavItemState extends State<_SidebarNavItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     //* Color logic for active/inactive states
-    final color = isActive
+    final color = widget.isActive
         ? AppColors.primaryDark
         : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText);
 
     //* Build item content
-    Widget content = Container(
+    Widget itemContent = AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
       height: 48,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.selectedSidebarBg : Colors.transparent,
+        color: widget.isActive
+            ? AppColors.selectedSidebarBg
+            : (_isHovered
+                ? (isDark
+                    ? Colors.white10
+                    : Colors.black.withValues(alpha: 0.05))
+                : Colors.transparent),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
+      //* FIX 2: Row is constrained — label must never force overflow
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-            isExpanded ? MainAxisAlignment.start : MainAxisAlignment.center,
+        mainAxisAlignment: widget.isExpanded
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.center,
         children: [
           //* Icon with optional badge
           Stack(
             clipBehavior: Clip.none,
             children: [
               Icon(
-                isActive ? item.activeIcon : item.icon,
+                widget.isActive ? widget.item.activeIcon : widget.item.icon,
                 size: 22,
                 color: color,
               ),
-              if (showEmergencyBadge)
+              if (widget.showEmergencyBadge)
                 Positioned(
                   right: -2,
                   top: -2,
@@ -216,18 +263,21 @@ class _SidebarNavItem extends StatelessWidget {
             ],
           ),
           //* Label (only when expanded)
-          if (isExpanded) ...[
+          if (widget.isExpanded) ...[
             const SizedBox(width: 12),
+            //* Flexible absorbs remaining space without overflow
             Flexible(
               child: Text(
-                item.label,
+                widget.item.label,
                 style: TextStyle(
                   color: color,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight:
+                      widget.isActive ? FontWeight.w600 : FontWeight.normal,
                   fontSize: 14,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
+                softWrap: false,
               ),
             ),
           ],
@@ -236,20 +286,24 @@ class _SidebarNavItem extends StatelessWidget {
     );
 
     //* Wrap in Tooltip when collapsed
-    if (!isExpanded) {
-      content = Tooltip(
-        message: item.label,
+    if (!widget.isExpanded) {
+      itemContent = Tooltip(
+        message: widget.item.label,
         preferBelow: false,
         margin: const EdgeInsets.only(left: 70),
-        child: content,
+        child: itemContent,
       );
     }
 
-    //* Make it interactive
-    return InkWell(
-      onTap: () => context.go(item.route),
-      borderRadius: BorderRadius.circular(8),
-      child: content,
+    //* Dual input: MouseRegion for mouse hover, InkWell for touch press
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: () => context.go(widget.item.route),
+        borderRadius: BorderRadius.circular(8),
+        child: itemContent,
+      ),
     );
   }
 }
