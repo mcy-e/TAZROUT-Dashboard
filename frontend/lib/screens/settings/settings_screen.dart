@@ -13,6 +13,7 @@ import '../../../core/utils/app_logger.dart';
 import '../../../models/user_preferences_model.dart';
 import '../../../providers/preferences_provider.dart';
 import '../../../providers/theme_provider.dart';
+import '../../../providers/locale_provider.dart';
 import 'widgets/display_settings_card.dart';
 import 'widgets/system_settings_card.dart';
 import 'widgets/notification_settings_card.dart';
@@ -103,6 +104,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     //* Apply theme change immediately
                     ref.read(themeModeProvider.notifier).state =
                         _draft.theme == 'DARK' ? ThemeMode.dark : ThemeMode.light;
+                    
+                    //* Apply locale change immediately on Apply Settings
+                    final localeMap = {'EN': 'en', 'FR': 'fr', 'AR': 'ar'};
+                    final code = localeMap[_draft.language] ?? 'en';
+                    ref.read(localeProvider.notifier).state = Locale(code);
+                    AppLogger.state('SETTINGS', 'Locale set to $code');
+
                     AppLogger.info('SETTINGS', 'Preferences applied: ${_draft.theme}');
                     // TODO :: Publish _draft to MQTT topic: tazrout/settings/preferences
                   },

@@ -1,10 +1,13 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/localization/l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_logger.dart';
 import 'providers/theme_provider.dart';
+import 'providers/locale_provider.dart';
 
 //& App Entry Point
 Future<void> main() async {
@@ -29,6 +32,8 @@ class TazroutApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     //* Watch theme provider ,rebuilds app on theme change
     final themeMode = ref.watch(themeModeProvider);
+    //* Watch locale provider
+    final locale = ref.watch(localeProvider);
     
     //* Returns MaterialApp using routerConfig from AppRouter
     return MaterialApp.router(
@@ -36,6 +41,18 @@ class TazroutApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('fr'),
+        Locale('ar'),
+      ],
       title: 'Tazrout',
       debugShowCheckedModeBanner: false,
     );
