@@ -6,18 +6,21 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../models/notification_model.dart';
+import '../../../providers/notification_provider.dart';
 
 //& SystemControlsCard
-class SystemControlsCard extends StatelessWidget {
+class SystemControlsCard extends ConsumerWidget {
   //* Card with title "System Controls" using AppTypography.headingXS
   const SystemControlsCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -34,12 +37,39 @@ class SystemControlsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //* Title
-            Text(
-              'System Controls',
-              style: AppTypography.headingXS.copyWith(
-                color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-              ),
+            //* Header Row with Title and Test Trigger
+            Row(
+              children: [
+                Text(
+                  'System Controls',
+                  style: AppTypography.headingXS.copyWith(
+                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                  ),
+                ),
+                const Spacer(),
+                //* Test notification trigger — remove after MQTT is wired
+                //* Accessible via a small debug IconButton in the card header
+                // TODO :: Remove test trigger when MQTT events are live
+                IconButton(
+                  icon: Icon(
+                    PhosphorIcons.bellRinging(),
+                    size: 16,
+                    color: AppColors.darkMutedText,
+                  ),
+                  tooltip: 'Test notification',
+                  onPressed: () {
+                    ref.read(notificationProvider.notifier).add(
+                          NotificationModel(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            type: NotificationType.sensorAlert,
+                            title: 'Zone C Offline',
+                            message: 'Device lost connection. Check gateway.',
+                            timestamp: DateTime.now(),
+                          ),
+                        );
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             //* Two full-width outlined buttons stacked vertically with 12px gap

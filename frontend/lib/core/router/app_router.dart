@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/common/app_sidebar.dart';
+import '../../widgets/common/notification_overlay.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/zones/zones_screen.dart';
 import '../../screens/analytics/analytics_screen.dart';
@@ -26,10 +27,17 @@ class AppRouter {
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
           return Scaffold(
-            body: Row(
+            body: Stack(
               children: [
-                const AppSidebar(),
-                Expanded(child: child),
+                //* Main content row
+                Row(
+                  children: [
+                    const AppSidebar(),
+                    Expanded(child: child),
+                  ],
+                ),
+                //* Notification overlay — sits above all content
+                const NotificationOverlay(),
               ],
             ),
           );
