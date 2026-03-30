@@ -10,34 +10,16 @@ import '../../../../models/user_preferences_model.dart';
 import 'settings_toggle_row.dart';
 
 //& NotificationSettingsCard Widget
-class NotificationSettingsCard extends StatefulWidget {
-  final UserPreferencesModel initialPrefs;
-  final Function(UserPreferencesModel) onChanged;
+class NotificationSettingsCard extends StatelessWidget {
+  final UserPreferencesModel prefs;
+  final Function(UserPreferencesModel) onChange;
 
-  //* StatefulWidget
+  //* StatelessWidget — receives prefs and onChange callback
   const NotificationSettingsCard({
     super.key,
-    required this.initialPrefs,
-    required this.onChanged,
+    required this.prefs,
+    required this.onChange,
   });
-
-  @override
-  State<NotificationSettingsCard> createState() => _NotificationSettingsCardState();
-}
-
-class _NotificationSettingsCardState extends State<NotificationSettingsCard> {
-  late UserPreferencesModel _prefs;
-
-  @override
-  void initState() {
-    super.initState();
-    _prefs = widget.initialPrefs;
-  }
-
-  void _updatePrefs(UserPreferencesModel newPrefs) {
-    setState(() => _prefs = newPrefs);
-    widget.onChanged(newPrefs);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +61,8 @@ class _NotificationSettingsCardState extends State<NotificationSettingsCard> {
             SettingsToggleRow(
               label: 'Sound Alerts',
               subtitle: 'Play a sound when a notification arrives.',
-              value: _prefs.soundNotifications,
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(soundNotifications: val)),
+              value: prefs.soundNotifications,
+              onChanged: (val) => onChange(prefs.copyWith(soundNotifications: val)),
             ),
           ],
         ),

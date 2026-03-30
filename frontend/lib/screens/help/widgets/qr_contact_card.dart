@@ -40,64 +40,83 @@ class QrContactCard extends StatelessWidget {
                   color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    //* Text("More Help ?") AppTypography.headingM
-                    Text(
-                      'More Help ?',
-                      style: AppTypography.headingM.copyWith(
-                        color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+              child: Stack(
+                children: [
+                  //* Close button — positioned top-right of card
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: AppColors.darkMutedText,
                       ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Close',
                     ),
-                    const SizedBox(height: 8),
-                    //* Description
-                    Text(
-                      'Scan the code below or call the following number for More Help.',
-                      textAlign: TextAlign.center,
-                      style: AppTypography.bodySRegular.copyWith(
-                        color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    //* QR code placeholder
-                    Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary10,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary, width: 2),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          PhosphorIcons.qrCode(),
-                          size: 80,
-                          color: AppColors.primary,
+                  ),
+                  //* Foreground content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        //* Text("More Help ?") AppTypography.headingM
+                        Text(
+                          'More Help ?',
+                          style: AppTypography.headingM.copyWith(
+                            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        //* Description
+                        Text(
+                          'Scan the code below or call the following number for More Help.',
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySRegular.copyWith(
+                            color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        //* QR code placeholder
+                        Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary10,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary, width: 2),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              PhosphorIcons.qrCode(),
+                              size: 80,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        // TODO :: Replace with QrImageView widget
+                        const SizedBox(height: 24),
+                        //* Website row
+                        _ContactRow(
+                          icon: PhosphorIcons.globe(),
+                          text: 'Tazrout/help.com',
+                          onTap: () => AppLogger.info('HELP', 'Website tapped'),
+                          // TODO :: Open URL via url_launcher
+                        ),
+                        const SizedBox(height: 12),
+                        //* Phone row
+                        _ContactRow(
+                          icon: PhosphorIcons.phone(),
+                          text: '+213-55-55-55-55',
+                          onTap: () => AppLogger.info('HELP', 'Phone tapped'),
+                          // TODO :: Copy to clipboard or open dialler
+                        ),
+                      ],
                     ),
-                    // TODO :: Replace with QrImageView widget
-                    const SizedBox(height: 24),
-                    //* Website row
-                    _ContactRow(
-                      icon: PhosphorIcons.globe(),
-                      text: 'Tazrout/help.com',
-                      onTap: () => AppLogger.info('HELP', 'Website tapped'),
-                      // TODO :: Open URL via url_launcher
-                    ),
-                    const SizedBox(height: 12),
-                    //* Phone row
-                    _ContactRow(
-                      icon: PhosphorIcons.phone(),
-                      text: '+213-55-55-55-55',
-                      onTap: () => AppLogger.info('HELP', 'Phone tapped'),
-                      // TODO :: Copy to clipboard or open dialler
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),

@@ -10,34 +10,16 @@ import '../../../../models/user_preferences_model.dart';
 import 'settings_dropdown_row.dart';
 
 //& DisplaySettingsCard Widget
-class DisplaySettingsCard extends StatefulWidget {
-  final UserPreferencesModel initialPrefs;
-  final Function(UserPreferencesModel) onChanged;
+class DisplaySettingsCard extends StatelessWidget {
+  final UserPreferencesModel prefs;
+  final Function(UserPreferencesModel) onChange;
 
-  //* StatefulWidget — owns local display preference state
+  //* StatelessWidget — receives prefs and onChange callback
   const DisplaySettingsCard({
     super.key,
-    required this.initialPrefs,
-    required this.onChanged,
+    required this.prefs,
+    required this.onChange,
   });
-
-  @override
-  State<DisplaySettingsCard> createState() => _DisplaySettingsCardState();
-}
-
-class _DisplaySettingsCardState extends State<DisplaySettingsCard> {
-  late UserPreferencesModel _prefs;
-
-  @override
-  void initState() {
-    super.initState();
-    _prefs = widget.initialPrefs;
-  }
-
-  void _updatePrefs(UserPreferencesModel newPrefs) {
-    setState(() => _prefs = newPrefs);
-    widget.onChanged(newPrefs);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,45 +61,45 @@ class _DisplaySettingsCardState extends State<DisplaySettingsCard> {
             SettingsDropdownRow(
               label: 'Switch Language',
               subtitle: 'Select your preferred interface language.',
-              value: _prefs.language,
+              value: prefs.language,
               options: const ['EN', 'FR', 'AR'],
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(language: val)),
+              onChanged: (val) => onChange(prefs.copyWith(language: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Switch Theme
             SettingsDropdownRow(
               label: 'Switch Theme',
               subtitle: 'Toggle between Light and Dark mode.',
-              value: _prefs.theme,
+              value: prefs.theme,
               options: const ['LIGHT', 'DARK'],
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(theme: val)),
+              onChanged: (val) => onChange(prefs.copyWith(theme: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Switch Font Size
             SettingsDropdownRow(
               label: 'Switch Font Size',
               subtitle: 'Adjust the text size for better readability.',
-              value: _prefs.fontSize,
+              value: prefs.fontSize,
               options: const ['SMALL', 'MEDIUM', 'LARGE'],
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(fontSize: val)),
+              onChanged: (val) => onChange(prefs.copyWith(fontSize: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Date Format
             SettingsDropdownRow(
               label: 'Date Format',
               subtitle: 'Choose how dates are displayed.',
-              value: _prefs.dateFormat,
+              value: prefs.dateFormat,
               options: const ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(dateFormat: val)),
+              onChanged: (val) => onChange(prefs.copyWith(dateFormat: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Time Format
             SettingsDropdownRow(
               label: 'Time Format',
               subtitle: 'Choose between 12-hour and 24-hour clocks.',
-              value: _prefs.timeFormat,
+              value: prefs.timeFormat,
               options: const ['24H', '12H'],
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(timeFormat: val)),
+              onChanged: (val) => onChange(prefs.copyWith(timeFormat: val)),
             ),
           ],
         ),

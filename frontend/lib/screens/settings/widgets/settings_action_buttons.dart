@@ -2,13 +2,12 @@
 //? Reset Default: outlined button, reverts all local state to defaults.
 //? Apply Settings: filled green button, saves preferences.
 //? Both use hover states and confirmation where appropriate.
-// TODO :: Apply Settings triggers PUT /api/v1/user/preferences
+// TODO :: Apply Settings triggers MQTT publish: tazrout/settings/preferences
 
 //& Imports
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/app_logger.dart';
 
 //& SettingsActionButtons Widget
 class SettingsActionButtons extends StatelessWidget {
@@ -29,10 +28,7 @@ class SettingsActionButtons extends StatelessWidget {
       children: [
         //* Reset Default Button
         OutlinedButton(
-          onPressed: () {
-            AppLogger.info('SETTINGS', 'Reset to defaults');
-            onReset();
-          },
+          onPressed: onReset,
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(120, 44),
             side: const BorderSide(color: AppColors.darkStrokeDivider),
@@ -57,10 +53,7 @@ class SettingsActionButtons extends StatelessWidget {
         const SizedBox(width: 16),
         //* Apply Settings Button
         ElevatedButton(
-          onPressed: () {
-            AppLogger.info('SETTINGS', 'Settings applied');
-            onApply();
-          },
+          onPressed: onApply,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(140, 44),
             backgroundColor: AppColors.primary,

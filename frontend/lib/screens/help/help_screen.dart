@@ -47,6 +47,7 @@ class HelpScreen extends StatelessWidget {
             SupportBanner(
               onGetSupport: () => showDialog(
                 context: context,
+                barrierDismissible: true,
                 builder: (_) => const Dialog(
                   backgroundColor: Colors.transparent,
                   insetPadding: EdgeInsets.symmetric(horizontal: 24),

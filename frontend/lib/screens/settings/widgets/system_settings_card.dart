@@ -11,34 +11,16 @@ import 'settings_dropdown_row.dart';
 import 'settings_toggle_row.dart';
 
 //& SystemSettingsCard Widget
-class SystemSettingsCard extends StatefulWidget {
-  final UserPreferencesModel initialPrefs;
-  final Function(UserPreferencesModel) onChanged;
+class SystemSettingsCard extends StatelessWidget {
+  final UserPreferencesModel prefs;
+  final Function(UserPreferencesModel) onChange;
 
-  //* StatefulWidget — owns local system preference state
+  //* StatelessWidget — receives prefs and onChange callback
   const SystemSettingsCard({
     super.key,
-    required this.initialPrefs,
-    required this.onChanged,
+    required this.prefs,
+    required this.onChange,
   });
-
-  @override
-  State<SystemSettingsCard> createState() => _SystemSettingsCardState();
-}
-
-class _SystemSettingsCardState extends State<SystemSettingsCard> {
-  late UserPreferencesModel _prefs;
-
-  @override
-  void initState() {
-    super.initState();
-    _prefs = widget.initialPrefs;
-  }
-
-  void _updatePrefs(UserPreferencesModel newPrefs) {
-    setState(() => _prefs = newPrefs);
-    widget.onChanged(newPrefs);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,22 +62,22 @@ class _SystemSettingsCardState extends State<SystemSettingsCard> {
             SettingsToggleRow(
               label: 'Power Saving',
               subtitle: 'Reduce performance to save energy.',
-              value: _prefs.powerOptimization,
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(powerOptimization: val)),
+              value: prefs.powerOptimization,
+              onChanged: (val) => onChange(prefs.copyWith(powerOptimization: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Auto Sleep Timer Dropdown
             SettingsDropdownRow(
               label: 'Auto Sleep Timer',
               subtitle: 'Duration before entering sleep mode.',
-              value: _prefs.sleepAfterMinutes == 0 ? 'Never' : '${_prefs.sleepAfterMinutes} Minutes',
+              value: prefs.sleepAfterMinutes == 0 ? 'Never' : '${prefs.sleepAfterMinutes} Minutes',
               options: const ['5 Minutes', '10 Minutes', '15 Minutes', '30 Minutes', 'Never'],
               onChanged: (val) {
                 int minutes = 0;
                 if (val != 'Never') {
                   minutes = int.parse(val.split(' ')[0]);
                 }
-                _updatePrefs(_prefs.copyWith(sleepAfterMinutes: minutes));
+                onChange(prefs.copyWith(sleepAfterMinutes: minutes));
               },
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
@@ -103,8 +85,8 @@ class _SystemSettingsCardState extends State<SystemSettingsCard> {
             SettingsToggleRow(
               label: 'UI Animations',
               subtitle: 'Enable smooth transitions and effects.',
-              value: _prefs.animationsEnabled,
-              onChanged: (val) => _updatePrefs(_prefs.copyWith(animationsEnabled: val)),
+              value: prefs.animationsEnabled,
+              onChanged: (val) => onChange(prefs.copyWith(animationsEnabled: val)),
             ),
           ],
         ),
