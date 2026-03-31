@@ -78,4 +78,153 @@ abstract class AppAssets {
   static const String berberIconTrianglePink = 'assets/images/berber_icons/svg/icon_triangle_pink.svg';
   static const String berberIconStarburst = 'assets/images/berber_icons/svg/icon_starburst.svg';
   static const String berberIconArrowsCross = 'assets/images/berber_icons/svg/icon_arrows_cross.svg';
+
+  //& Custom App Icons — Dark Theme
+  //? Naming: variant=IconName — I = Idle, H = Hover, Active = selected
+
+  //* Navigation icons
+  static const String darkIconHomeI = 'assets/icons/Dark/svg/app_icons/variant=Home I.svg';
+  static const String darkIconHomeH = 'assets/icons/Dark/svg/app_icons/variant=Home H.svg';
+  static const String darkIconHomeActive = 'assets/icons/Dark/svg/app_icons/variant=Home Active.svg';
+  static const String darkIconZoneI = 'assets/icons/Dark/svg/app_icons/variant=Zone I.svg';
+  static const String darkIconZoneH = 'assets/icons/Dark/svg/app_icons/variant=Zone H.svg';
+  static const String darkIconZonesActive = 'assets/icons/Dark/svg/app_icons/variant=Zones Active.svg';
+  static const String darkIconAnalyticsI = 'assets/icons/Dark/svg/app_icons/variant=Analytics I.svg';
+  static const String darkIconAnalyticsH = 'assets/icons/Dark/svg/app_icons/variant=Analytics H.svg';
+  static const String darkIconAnalyticsActive = 'assets/icons/Dark/svg/app_icons/variant=Analytics Active.svg';
+  static const String darkIconEmergencyI = 'assets/icons/Dark/svg/app_icons/variant=Emergency I.svg';
+  static const String darkIconEmergencyH = 'assets/icons/Dark/svg/app_icons/variant=Emergency H.svg';
+  static const String darkIconEmergencyActive = 'assets/icons/Dark/svg/app_icons/variant=Emergency Active.svg';
+  static const String darkIconSettingI = 'assets/icons/Dark/svg/app_icons/variant=Setting I.svg';
+  static const String darkIconSettingH = 'assets/icons/Dark/svg/app_icons/variant=Setting H.svg';
+  static const String darkIconSettingsActive = 'assets/icons/Dark/svg/app_icons/variant=Settings Active.svg';
+  static const String darkIconHelpI = 'assets/icons/Dark/svg/app_icons/variant=Help I.svg';
+  static const String darkIconHelpH = 'assets/icons/Dark/svg/app_icons/variant=Help H.svg';
+  static const String darkIconHelpActive = 'assets/icons/Dark/svg/app_icons/variant=Help Active.svg';
+  static const String darkIconUserManualI = 'assets/icons/Dark/svg/app_icons/variant=User Manual I.svg';
+  static const String darkIconUserManualH = 'assets/icons/Dark/svg/app_icons/variant=User Manual H.svg';
+  static const String darkIconUserManualActive = 'assets/icons/Dark/svg/app_icons/variant=User Manual Active.svg';
+  static const String darkIconSideMenu = 'assets/icons/Dark/svg/app_icons/variant=Side Menu.svg';
+
+  //* Action icons
+  static const String darkIconRebootI = 'assets/icons/Dark/svg/app_icons/variant=Reboot I.svg';
+  static const String darkIconRebootH = 'assets/icons/Dark/svg/app_icons/variant=Reboot H.svg';
+  static const String darkIconShutDownI = 'assets/icons/Dark/svg/app_icons/variant=Shut Down I.svg';
+  static const String darkIconShutDownH = 'assets/icons/Dark/svg/app_icons/variant=Shut Down H.svg';
+  static const String darkIconEmergencyButton = 'assets/icons/Dark/svg/app_icons/variant=Emergency Button.svg';
+  static const String darkIconEmergencyIcon = 'assets/icons/Dark/svg/app_icons/variant=Emergency Icon.svg';
+  static const String darkIconChecked = 'assets/icons/Dark/svg/app_icons/variant=Checked.svg';
+  static const String darkIconExclamation = 'assets/icons/Dark/svg/app_icons/variant=Exclamation.svg';
+  static const String darkIconArrowRight = 'assets/icons/Dark/svg/app_icons/variant=Arrow Right.svg';
+  static const String darkIconOffPoint = 'assets/icons/Dark/svg/app_icons/variant=OFF_Point.svg';
+
+  //* Sensor & data icons
+  static const String darkIconWaterI = 'assets/icons/Dark/svg/app_icons/variant=Water I.svg';
+  static const String darkIconWaterH = 'assets/icons/Dark/svg/app_icons/variant=Water H.svg';
+  static const String darkIconWaterPercentage = 'assets/icons/Dark/svg/app_icons/variant=Water Percentage.svg';
+  static const String darkIconWaterValveClosed = 'assets/icons/Dark/svg/app_icons/variant=Water Valve Closed.svg';
+  static const String darkIconTemperatureI = 'assets/icons/Dark/svg/app_icons/variant=Temperature I.svg';
+  static const String darkIconTemperatureH = 'assets/icons/Dark/svg/app_icons/variant=Temperature H.svg';
+  static const String darkIconHumidityI = 'assets/icons/Dark/svg/app_icons/variant=Humidity I.svg';
+  static const String darkIconHumidityH = 'assets/icons/Dark/svg/app_icons/variant=Humidity H.svg';
+  static const String darkIconSoilIdle = 'assets/icons/Dark/svg/app_icons/variant=Soil Idle.svg';
+  static const String darkIconSoilH = 'assets/icons/Dark/svg/app_icons/variant=Soil H.svg';
+  static const String darkIconPerformance = 'assets/icons/Dark/svg/app_icons/variant=Performance.svg';
+  static const String darkIconConnectionState = 'assets/icons/Dark/svg/app_icons/variant=Conection State.svg';
+  static const String darkIconConnectionStateClosed = 'assets/icons/Dark/svg/app_icons/variant=Conection State Closed.svg';
+  static const String darkIconData = 'assets/icons/Dark/svg/app_icons/variant=Data.svg';
+
+  //* Analytics & AI icons
+  static const String darkIconAiDecision = 'assets/icons/Dark/svg/app_icons/variant=AI Decesision.svg';
+  static const String darkIconObservation = 'assets/icons/Dark/svg/app_icons/variant=Observation.svg';
+  static const String darkIconRecommendation = 'assets/icons/Dark/svg/app_icons/variant=Recomondation.svg';
+  static const String darkIconReadings = 'assets/icons/Dark/svg/app_icons/variant=Readings.svg';
+  static const String darkIconAccess = 'assets/icons/Dark/svg/app_icons/variant=Access.svg';
+
+  //* Settings icons
+  static const String darkIconScreenSettings = 'assets/icons/Dark/svg/app_icons/variant=Screen Settings.svg';
+  static const String darkIconSystemSettings = 'assets/icons/Dark/svg/app_icons/variant=System Settings.svg';
+  static const String darkIconNotificationSettings = 'assets/icons/Dark/svg/app_icons/variant=Notification Settings.svg';
+
+  //* Help & support icons
+  static const String darkIconFactLamp = 'assets/icons/Dark/svg/app_icons/variant=Fact lamp.svg';
+  static const String darkIconFactStar = 'assets/icons/Dark/svg/app_icons/variant=Fact Star.svg';
+  static const String darkIconAssistanceBg = 'assets/icons/Dark/svg/app_icons/variant=Assistance Icon BG.svg';
+  static const String darkIconManual = 'assets/icons/Dark/svg/app_icons/variant=Manual.svg';
+  static const String darkIconCalendar = 'assets/icons/Dark/svg/app_icons/variant=Calendar.svg';
+
+  //& Custom App Icons — Light Theme
+  //? Same naming structure as dark — swap Dark → Light in path
+
+  static const String lightIconHomeI = 'assets/icons/Light/svg/app_icons/variant=Home I.svg';
+  static const String lightIconHomeH = 'assets/icons/Light/svg/app_icons/variant=Home H.svg';
+  static const String lightIconHomeActive = 'assets/icons/Light/svg/app_icons/variant=Home Active.svg';
+  static const String lightIconZoneI = 'assets/icons/Light/svg/app_icons/variant=Zone I.svg';
+  static const String lightIconZoneH = 'assets/icons/Light/svg/app_icons/variant=Zone H.svg';
+  static const String lightIconZonesActive = 'assets/icons/Light/svg/app_icons/variant=Zones Active.svg';
+  static const String lightIconAnalyticsI = 'assets/icons/Light/svg/app_icons/variant=Analytics I.svg';
+  static const String lightIconAnalyticsH = 'assets/icons/Light/svg/app_icons/variant=Analytics H.svg';
+  static const String lightIconAnalyticsActive = 'assets/icons/Light/svg/app_icons/variant=Analytics Active.svg';
+  static const String lightIconEmergencyI = 'assets/icons/Light/svg/app_icons/variant=Emergency I.svg';
+  static const String lightIconEmergencyH = 'assets/icons/Light/svg/app_icons/variant=Emergency H.svg';
+  static const String lightIconEmergencyActive = 'assets/icons/Light/svg/app_icons/variant=Emergency Active.svg';
+  static const String lightIconSettingI = 'assets/icons/Light/svg/app_icons/variant=Setting I.svg';
+  static const String lightIconSettingH = 'assets/icons/Light/svg/app_icons/variant=Setting H.svg';
+  static const String lightIconSettingsActive = 'assets/icons/Light/svg/app_icons/variant=Settings Active.svg';
+  static const String lightIconHelpI = 'assets/icons/Light/svg/app_icons/variant=Help I.svg';
+  static const String lightIconHelpH = 'assets/icons/Light/svg/app_icons/variant=Help H.svg';
+  static const String lightIconHelpActive = 'assets/icons/Light/svg/app_icons/variant=Help Active.svg';
+  static const String lightIconUserManualI = 'assets/icons/Light/svg/app_icons/variant=User Manual I.svg';
+  static const String lightIconUserManualH = 'assets/icons/Light/svg/app_icons/variant=User Manual H.svg';
+  static const String lightIconUserManualActive = 'assets/icons/Light/svg/app_icons/variant=User Manual Active.svg';
+  static const String lightIconSideMenu = 'assets/icons/Light/svg/app_icons/variant=Side Menu.svg';
+  static const String lightIconRebootI = 'assets/icons/Light/svg/app_icons/variant=Reboot I.svg';
+  static const String lightIconRebootH = 'assets/icons/Light/svg/app_icons/variant=Reboot H.svg';
+  static const String lightIconShutDownI = 'assets/icons/Light/svg/app_icons/variant=Shut Down I.svg';
+  static const String lightIconShutDownH = 'assets/icons/Light/svg/app_icons/variant=Shut Down H.svg';
+  static const String lightIconEmergencyButton = 'assets/icons/Light/svg/app_icons/variant=Emergency Button.svg';
+  static const String lightIconEmergencyIcon = 'assets/icons/Light/svg/app_icons/variant=Emergency Icon.svg';
+  static const String lightIconChecked = 'assets/icons/Light/svg/app_icons/variant=Checked.svg';
+  static const String lightIconExclamation = 'assets/icons/Light/svg/app_icons/variant=Exclamation.svg';
+  static const String lightIconArrowRight = 'assets/icons/Light/svg/app_icons/variant=Arrow Right.svg';
+  static const String lightIconWaterI = 'assets/icons/Light/svg/app_icons/variant=Water I.svg';
+  static const String lightIconWaterH = 'assets/icons/Light/svg/app_icons/variant=Water H.svg';
+  static const String lightIconWaterPercentage = 'assets/icons/Light/svg/app_icons/variant=Water Percentage.svg';
+  static const String lightIconWaterValveClosed = 'assets/icons/Light/svg/app_icons/variant=Water Valve Closed.svg';
+  static const String lightIconTemperatureI = 'assets/icons/Light/svg/app_icons/variant=Temperature I.svg';
+  static const String lightIconTemperatureH = 'assets/icons/Light/svg/app_icons/variant=Temperature H.svg';
+  static const String lightIconHumidityI = 'assets/icons/Light/svg/app_icons/variant=Humidity I.svg';
+  static const String lightIconHumidityH = 'assets/icons/Light/svg/app_icons/variant=Humidity H.svg';
+  static const String lightIconSoilIdle = 'assets/icons/Light/svg/app_icons/variant=Soil Idle.svg';
+  static const String lightIconSoilH = 'assets/icons/Light/svg/app_icons/variant=Soil H.svg';
+  static const String lightIconPerformance = 'assets/icons/Light/svg/app_icons/variant=Performance.svg';
+  static const String lightIconConnectionState = 'assets/icons/Light/svg/app_icons/variant=Conection State.svg';
+  static const String lightIconConnectionStateClosed = 'assets/icons/Light/svg/app_icons/variant=Conection State Closed.svg';
+  static const String lightIconAiDecision = 'assets/icons/Light/svg/app_icons/variant=AI Decesision.svg';
+  static const String lightIconObservation = 'assets/icons/Light/svg/app_icons/variant=Observation.svg';
+  static const String lightIconRecommendation = 'assets/icons/Light/svg/app_icons/variant=Recomondation.svg';
+  static const String lightIconReadings = 'assets/icons/Light/svg/app_icons/variant=Readings.svg';
+  static const String lightIconAccess = 'assets/icons/Light/svg/app_icons/variant=Access.svg';
+  static const String lightIconScreenSettings = 'assets/icons/Light/svg/app_icons/variant=Screen Settings.svg';
+  static const String lightIconSystemSettings = 'assets/icons/Light/svg/app_icons/variant=System Settings.svg';
+  static const String lightIconNotificationSettings = 'assets/icons/Light/svg/app_icons/variant=Notification Settings.svg';
+  static const String lightIconFactLamp = 'assets/icons/Light/svg/app_icons/variant=Fact lamp.svg';
+  static const String lightIconFactStar = 'assets/icons/Light/svg/app_icons/variant=Fact Star.svg';
+  static const String lightIconAssistanceBg = 'assets/icons/Light/svg/app_icons/variant=Assistance Icon BG.svg';
+  static const String lightIconManual = 'assets/icons/Light/svg/app_icons/variant=Manual.svg';
+  static const String lightIconCalendar = 'assets/icons/Light/svg/app_icons/variant=Calendar.svg';
+
+  //& Chart Preview Images
+  //? Static graph preview images per sensor type and theme
+
+  static const String chartWaterDark = 'assets/images/chart_previews/variant=Water_Graph_dark.png';
+  static const String chartWaterLight = 'assets/images/chart_previews/variant=Water_Graph_light.png';
+  static const String chartTemperatureDark = 'assets/images/chart_previews/variant=Temperature_Graph_dark.png';
+  static const String chartTemperatureLight = 'assets/images/chart_previews/variant=Temperature_Graph_light.png';
+  static const String chartHumidityDark = 'assets/images/chart_previews/variant=Humidity_Graph_dark.png';
+  static const String chartHumidityLight = 'assets/images/chart_previews/variant=Humidity_Graph_light.png';
+  static const String chartSoilDark = 'assets/images/chart_previews/variant=Soil_Graph_dark.png';
+  static const String chartSoilLight = 'assets/images/chart_previews/variant=Soil_Graph_light.png';
+  static const String chartWaterTempDark = 'assets/images/chart_previews/variant=Water_Temp_Graph_dark.png';
+  static const String chartWaterTempLight = 'assets/images/chart_previews/variant=Water_Temp_Graph_light.png';
 }

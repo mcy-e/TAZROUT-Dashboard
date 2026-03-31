@@ -46,4 +46,9 @@ flutter:
       - assets/images/berber_symbols/png/
       - assets/images/berber_typography/svg/
       - assets/images/berber_typography/png/
+      - assets/icons/Dark/svg/app_icons/
+      - assets/icons/Dark/png/app_icon/
+      - assets/icons/Light/svg/app_icons/
+      - assets/icons/Light/png/app_icons/
+      - assets/images/chart_previews/
       - .env
