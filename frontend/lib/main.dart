@@ -53,6 +53,13 @@ class TazroutApp extends ConsumerWidget {
         Locale('fr'),
         Locale('ar'),
       ],
+      //* Force LTR layout globally — prevents RTL mirror on Arabic
+      builder: (context, child) {
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: child!,
+        );
+      },
       title: 'Tazrout',
       debugShowCheckedModeBanner: false,
     );

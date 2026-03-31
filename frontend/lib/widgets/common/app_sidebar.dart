@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tazrout_dashboard/core/localization/l10n/app_localizations.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/navigation_provider.dart';
@@ -30,6 +31,56 @@ class AppSidebar extends ConsumerWidget {
   //* Constructor for AppSidebar
   const AppSidebar({super.key});
 
+  //* Returns nav items with localized labels
+  List<_NavItem> _buildNavItems(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return [
+      _NavItem(
+        label: l.navHome,
+        route: '/',
+        icon: PhosphorIcons.house(),
+        activeIcon: PhosphorIcons.house(PhosphorIconsStyle.fill),
+      ),
+      _NavItem(
+        label: l.navZones,
+        route: '/zones',
+        icon: PhosphorIcons.selectionAll(),
+        activeIcon: PhosphorIcons.selectionAll(PhosphorIconsStyle.fill),
+      ),
+      _NavItem(
+        label: l.navAnalytics,
+        route: '/analytics',
+        icon: PhosphorIcons.chartBar(),
+        activeIcon: PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
+      ),
+      _NavItem(
+        label: l.navEmergency,
+        route: '/emergency',
+        icon: PhosphorIcons.warningCircle(),
+        activeIcon: PhosphorIcons.warningCircle(PhosphorIconsStyle.fill),
+        isEmergency: true,
+      ),
+      _NavItem(
+        label: l.navSettings,
+        route: '/settings',
+        icon: PhosphorIcons.gear(),
+        activeIcon: PhosphorIcons.gear(PhosphorIconsStyle.fill),
+      ),
+      _NavItem(
+        label: l.navHelp,
+        route: '/help',
+        icon: PhosphorIcons.question(),
+        activeIcon: PhosphorIcons.question(PhosphorIconsStyle.fill),
+      ),
+      _NavItem(
+        label: l.navUserManual,
+        route: '/manual',
+        icon: PhosphorIcons.bookOpen(),
+        activeIcon: PhosphorIcons.bookOpen(PhosphorIconsStyle.fill),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     //* Watch sidebar expansion state
@@ -41,60 +92,14 @@ class AppSidebar extends ConsumerWidget {
     //* Theme state
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    //* Define navigation items
-    final navItems = [
-      _NavItem(
-        label: 'Home',
-        route: '/',
-        icon: PhosphorIcons.house(),
-        activeIcon: PhosphorIcons.house(PhosphorIconsStyle.fill),
-      ),
-      _NavItem(
-        label: 'Zones',
-        route: '/zones',
-        icon: PhosphorIcons.selectionAll(),
-        activeIcon: PhosphorIcons.selectionAll(PhosphorIconsStyle.fill),
-      ),
-      _NavItem(
-        label: 'Analytics',
-        route: '/analytics',
-        icon: PhosphorIcons.chartBar(),
-        activeIcon: PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
-      ),
-      _NavItem(
-        label: 'Emergency',
-        route: '/emergency',
-        icon: PhosphorIcons.warningCircle(),
-        activeIcon: PhosphorIcons.warningCircle(PhosphorIconsStyle.fill),
-        isEmergency: true,
-      ),
-      _NavItem(
-        label: 'Settings',
-        route: '/settings',
-        icon: PhosphorIcons.gear(),
-        activeIcon: PhosphorIcons.gear(PhosphorIconsStyle.fill),
-      ),
-      _NavItem(
-        label: 'Help',
-        route: '/help',
-        icon: PhosphorIcons.question(),
-        activeIcon: PhosphorIcons.question(PhosphorIconsStyle.fill),
-      ),
-      _NavItem(
-        label: 'User Manual',
-        route: '/manual',
-        icon: PhosphorIcons.bookOpen(),
-        activeIcon: PhosphorIcons.bookOpen(PhosphorIconsStyle.fill),
-      ),
-    ];
+    //* Localized navigation items
+    final navItems = _buildNavItems(context);
 
     //* Animated sidebar container wrapped in ClipRect to prevent overflow painting
-    //* FIX 1: ClipRect eliminates overflow during collapse/expand transition
     return ClipRect(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        //* FIX 4: Hard constraints prevent sub-pixel width issues during animation
         constraints: BoxConstraints(
           minWidth: isExpanded ? 220 : 68,
           maxWidth: isExpanded ? 220 : 68,
@@ -106,7 +111,6 @@ class AppSidebar extends ConsumerWidget {
         child: Column(
           children: [
             //* Sidebar Header: Logo + Toggle Button
-            //* FIX 3: AnimatedSwitcher transitions between expanded and collapsed header
             Container(
               height: 64,
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -231,7 +235,6 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      //* FIX 2: Row is constrained — label must never force overflow
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: widget.isExpanded
@@ -265,7 +268,6 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           //* Label (only when expanded)
           if (widget.isExpanded) ...[
             const SizedBox(width: 12),
-            //* Flexible absorbs remaining space without overflow
             Flexible(
               child: Text(
                 widget.item.label,
