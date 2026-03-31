@@ -2,35 +2,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tazrout_dashboard/core/localization/l10n/app_localizations.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../providers/navigation_provider.dart';
 
 //& NavItem Model
 class _NavItem {
   final String label;
   final String route;
-  final IconData icon;
-  final IconData activeIcon;
+  final String darkIdle;
+  final String darkHover;
+  final String darkActive;
+  final String lightIdle;
+  final String lightHover;
+  final String lightActive;
   final bool isEmergency;
 
   const _NavItem({
     required this.label,
     required this.route,
-    required this.icon,
-    required this.activeIcon,
+    required this.darkIdle,
+    required this.darkHover,
+    required this.darkActive,
+    required this.lightIdle,
+    required this.lightHover,
+    required this.lightActive,
     this.isEmergency = false,
   });
 }
 
 //& AppSidebar Widget
-class AppSidebar extends ConsumerWidget {
+class AppSidebar extends ConsumerStatefulWidget {
   //* Constructor for AppSidebar
   const AppSidebar({super.key});
 
+  @override
+  ConsumerState<AppSidebar> createState() => _AppSidebarState();
+}
+
+class _AppSidebarState extends ConsumerState<AppSidebar> {
   //* Returns nav items with localized labels
   List<_NavItem> _buildNavItems(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -38,51 +51,79 @@ class AppSidebar extends ConsumerWidget {
       _NavItem(
         label: l.navHome,
         route: '/',
-        icon: PhosphorIcons.house(),
-        activeIcon: PhosphorIcons.house(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconHomeI,
+        darkHover: AppAssets.darkIconHomeH,
+        darkActive: AppAssets.darkIconHomeActive,
+        lightIdle: AppAssets.lightIconHomeI,
+        lightHover: AppAssets.lightIconHomeH,
+        lightActive: AppAssets.lightIconHomeActive,
       ),
       _NavItem(
         label: l.navZones,
         route: '/zones',
-        icon: PhosphorIcons.selectionAll(),
-        activeIcon: PhosphorIcons.selectionAll(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconZoneI,
+        darkHover: AppAssets.darkIconZoneH,
+        darkActive: AppAssets.darkIconZonesActive,
+        lightIdle: AppAssets.lightIconZoneI,
+        lightHover: AppAssets.lightIconZoneH,
+        lightActive: AppAssets.lightIconZonesActive,
       ),
       _NavItem(
         label: l.navAnalytics,
         route: '/analytics',
-        icon: PhosphorIcons.chartBar(),
-        activeIcon: PhosphorIcons.chartBar(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconAnalyticsI,
+        darkHover: AppAssets.darkIconAnalyticsH,
+        darkActive: AppAssets.darkIconAnalyticsActive,
+        lightIdle: AppAssets.lightIconAnalyticsI,
+        lightHover: AppAssets.lightIconAnalyticsH,
+        lightActive: AppAssets.lightIconAnalyticsActive,
       ),
       _NavItem(
         label: l.navEmergency,
         route: '/emergency',
-        icon: PhosphorIcons.warningCircle(),
-        activeIcon: PhosphorIcons.warningCircle(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconEmergencyI,
+        darkHover: AppAssets.darkIconEmergencyH,
+        darkActive: AppAssets.darkIconEmergencyActive,
+        lightIdle: AppAssets.lightIconEmergencyI,
+        lightHover: AppAssets.lightIconEmergencyH,
+        lightActive: AppAssets.lightIconEmergencyActive,
         isEmergency: true,
       ),
       _NavItem(
         label: l.navSettings,
         route: '/settings',
-        icon: PhosphorIcons.gear(),
-        activeIcon: PhosphorIcons.gear(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconSettingI,
+        darkHover: AppAssets.darkIconSettingH,
+        darkActive: AppAssets.darkIconSettingsActive,
+        lightIdle: AppAssets.lightIconSettingI,
+        lightHover: AppAssets.lightIconSettingH,
+        lightActive: AppAssets.lightIconSettingsActive,
       ),
       _NavItem(
         label: l.navHelp,
         route: '/help',
-        icon: PhosphorIcons.question(),
-        activeIcon: PhosphorIcons.question(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconHelpI,
+        darkHover: AppAssets.darkIconHelpH,
+        darkActive: AppAssets.darkIconHelpActive,
+        lightIdle: AppAssets.lightIconHelpI,
+        lightHover: AppAssets.lightIconHelpH,
+        lightActive: AppAssets.lightIconHelpActive,
       ),
       _NavItem(
         label: l.navUserManual,
         route: '/manual',
-        icon: PhosphorIcons.bookOpen(),
-        activeIcon: PhosphorIcons.bookOpen(PhosphorIconsStyle.fill),
+        darkIdle: AppAssets.darkIconUserManualI,
+        darkHover: AppAssets.darkIconUserManualH,
+        darkActive: AppAssets.darkIconUserManualActive,
+        lightIdle: AppAssets.lightIconUserManualI,
+        lightHover: AppAssets.lightIconUserManualH,
+        lightActive: AppAssets.lightIconUserManualActive,
       ),
     ];
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     //* Watch sidebar expansion state
     final isExpanded = ref.watch(sidebarExpandedProvider);
     //* Watch emergency alert state
@@ -95,94 +136,37 @@ class AppSidebar extends ConsumerWidget {
     //* Localized navigation items
     final navItems = _buildNavItems(context);
 
-    //* Animated sidebar container wrapped in ClipRect to prevent overflow painting
     return ClipRect(
       child: AnimatedContainer(
+        clipBehavior: Clip.hardEdge,
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        constraints: BoxConstraints(
-          minWidth: isExpanded ? 220 : 68,
-          maxWidth: isExpanded ? 220 : 68,
-        ),
-        clipBehavior: Clip.hardEdge,
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.darkSidebar
-            : AppColors.lightSurfaceCard,
+        width: isExpanded ? 220.0 : 68.0,
+        color: isDark ? AppColors.darkSidebar : AppColors.lightSurfaceCard,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //* Sidebar Header: Logo + Toggle Button
-            Container(
-              height: 64,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: isExpanded
-                    ? Row(
-                        key: const ValueKey('expanded'),
-                        children: [
-                          //* Full logo — expanded state
-                          Flexible(
-                            child: SvgPicture.asset(
-                              isDark
-                                  ? AppAssets.logoDarkDefault
-                                  : AppAssets.logoLightDefault,
-                              height: 28,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          const Spacer(),
-                          //* Collapse button
-                          IconButton(
-                            onPressed: () => ref
-                                .read(sidebarExpandedProvider.notifier)
-                                .state = false,
-                            icon: const Icon(Icons.chevron_left),
-                            iconSize: 20,
-                            constraints: const BoxConstraints(
-                                minWidth: 48, minHeight: 48),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        key: const ValueKey('collapsed'),
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          //* Toggle button — collapsed state
-                          IconButton(
-                            onPressed: () => ref
-                                .read(sidebarExpandedProvider.notifier)
-                                .state = true,
-                            icon: const Icon(Icons.chevron_right),
-                            iconSize: 20,
-                            constraints: const BoxConstraints(
-                                minWidth: 48, minHeight: 48),
-                          ),
-                        ],
-                      ),
-              ),
+            _SidebarHeader(
+              isExpanded: isExpanded,
+              isDark: isDark,
+              onToggle: () {
+                ref.read(sidebarExpandedProvider.notifier).state = !isExpanded;
+              },
             ),
-            const SizedBox(height: 16),
-            //* Navigation Items List
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemCount: navItems.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 4),
-                itemBuilder: (context, index) {
-                  final item = navItems[index];
-                  final isActive = currentRoute == item.route;
-
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: navItems.map((item) {
                   return _SidebarNavItem(
                     item: item,
                     isExpanded: isExpanded,
-                    isActive: isActive,
-                    showEmergencyBadge: item.isEmergency && hasEmergency,
+                    isActive: currentRoute == item.route,
+                    hasAlert: hasEmergency,
+                    isDark: isDark,
                   );
-                },
+                }).toList(),
               ),
             ),
-            //* Bottom Spacer
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -190,18 +174,180 @@ class AppSidebar extends ConsumerWidget {
   }
 }
 
-//& _SidebarNavItem Class
+//& _SidebarHeader Widget
+class _SidebarHeader extends StatelessWidget {
+  final bool isExpanded;
+  final bool isDark;
+  final VoidCallback onToggle;
+
+  const _SidebarHeader({
+    required this.isExpanded,
+    required this.isDark,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizedBox(
+        height: 64,
+        child: isExpanded
+            ? OverflowBox(
+                maxWidth: double.infinity,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 12),
+                    //* Hamburger — LEFT side
+                    _HamburgerButton(isDark: isDark, onTap: onToggle),
+                    const SizedBox(width: 12),
+                    //* Logo — RIGHT side (inside AnimatedOpacity)
+                    AnimatedOpacity(
+                      opacity: isExpanded ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 80),
+                      child: _SidebarLogo(
+                        isDark: isDark,
+                        isExpanded: isExpanded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              )
+            : Center(
+                child: _HamburgerButton(isDark: isDark, onTap: onToggle),
+              ),
+      ),
+    );
+  }
+}
+
+//& _SidebarLogo Widget
+class _SidebarLogo extends StatefulWidget {
+  final bool isDark;
+  final bool isExpanded;
+
+  const _SidebarLogo({
+    required this.isDark,
+    required this.isExpanded,
+  });
+
+  @override
+  State<_SidebarLogo> createState() => _SidebarLogoState();
+}
+
+class _SidebarLogoState extends State<_SidebarLogo> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      //* Subtle scale up on hover — makes it feel responsive
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        //* Fixed size container prevents resize during crossfade
+        child: SizedBox(
+          height: 36,
+          child: AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            firstCurve: Curves.easeInOut,
+            secondCurve: Curves.easeInOut,
+            crossFadeState: _isHovered
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            //* Default state logo
+            firstChild: SvgPicture.asset(
+              widget.isExpanded
+                  ? (widget.isDark ? AppAssets.logoDarkDefault : AppAssets.logoLightDefault)
+                  : (widget.isDark ? AppAssets.logoDarkIconDefault : AppAssets.logoLightIconDefault),
+              height: 36,
+              fit: BoxFit.contain,
+            ),
+            //* Hover state logo
+            secondChild: SvgPicture.asset(
+              widget.isExpanded
+                  ? (widget.isDark ? AppAssets.logoDarkHover : AppAssets.logoLightHover)
+                  : (widget.isDark ? AppAssets.logoDarkIconHover : AppAssets.logoLightIconHover),
+              height: 36,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//& _HamburgerButton Widget
+class _HamburgerButton extends StatefulWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _HamburgerButton({
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_HamburgerButton> createState() => _HamburgerButtonState();
+}
+
+class _HamburgerButtonState extends State<_HamburgerButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? AppColors.darkHoverSurface.withValues(alpha: 0.5)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: SvgPicture.asset(
+              widget.isDark ? AppAssets.darkIconSideMenu : AppAssets.lightIconSideMenu,
+              width: 20,
+              height: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+//& _SidebarNavItem Widget
 class _SidebarNavItem extends StatefulWidget {
   final _NavItem item;
   final bool isExpanded;
   final bool isActive;
-  final bool showEmergencyBadge;
+  final bool hasAlert;
+  final bool isDark;
 
   const _SidebarNavItem({
     required this.item,
     required this.isExpanded,
     required this.isActive,
-    required this.showEmergencyBadge,
+    required this.hasAlert,
+    required this.isDark,
   });
 
   @override
@@ -211,100 +357,158 @@ class _SidebarNavItem extends StatefulWidget {
 class _SidebarNavItemState extends State<_SidebarNavItem> {
   bool _isHovered = false;
 
+  String _resolveIcon(bool isActive, bool isHovered, bool isDark, _NavItem item) {
+    if (isDark) {
+      if (isActive) return item.darkActive;
+      if (isHovered) return item.darkHover;
+      return item.darkIdle;
+    } else {
+      if (isActive) return item.lightActive;
+      if (isHovered) return item.lightHover;
+      return item.lightIdle;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    //* Color logic for active/inactive states
-    final color = widget.isActive
-        ? AppColors.primaryDark
-        : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText);
-
-    //* Build item content
-    Widget itemContent = AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      height: 48,
-      decoration: BoxDecoration(
-        color: widget.isActive
-            ? AppColors.selectedSidebarBg
-            : (_isHovered
-                ? (isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.05))
-                : Colors.transparent),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: widget.isExpanded
-            ? MainAxisAlignment.start
-            : MainAxisAlignment.center,
-        children: [
-          //* Icon with optional badge
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                widget.isActive ? widget.item.activeIcon : widget.item.icon,
-                size: 22,
-                color: color,
-              ),
-              if (widget.showEmergencyBadge)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.errorSolid,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          //* Label (only when expanded)
-          if (widget.isExpanded) ...[
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                widget.item.label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight:
-                      widget.isActive ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                softWrap: false,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-
-    //* Wrap in Tooltip when collapsed
-    if (!widget.isExpanded) {
-      itemContent = Tooltip(
-        message: widget.item.label,
-        preferBelow: false,
-        margin: const EdgeInsets.only(left: 70),
-        child: itemContent,
-      );
-    }
-
-    //* Dual input: MouseRegion for mouse hover, InkWell for touch press
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: InkWell(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
         onTap: () => context.go(widget.item.route),
-        borderRadius: BorderRadius.circular(8),
-        child: itemContent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: widget.isExpanded
+              ? //* Expanded hover pill with pattern overlay
+                Stack(
+                  children: [
+                    //* Base animated color background
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        //* Use explicit transparent to avoid interpolation flash
+                        color: widget.isActive
+                            ? (widget.item.isEmergency
+                                ? const Color(0x1AE94E31)
+                                : AppColors.selectedSidebarBg)
+                            : _isHovered
+                                ? (widget.isDark
+                                    ? AppColors.darkHoverSurface.withValues(alpha: 0.6)
+                                    : AppColors.lightElevatedCard)
+                                : (widget.isDark
+                                    ? AppColors.darkHoverSurface.withValues(alpha: 0.0)
+                                    : AppColors.lightElevatedCard.withValues(alpha: 0.0)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    //* Pattern overlay — subtle, right-aligned, fades in smoothly
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      opacity: _isHovered && !widget.isActive ? 1.0 : 0.0,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: SvgPicture.asset(
+                            widget.isDark
+                                ? AppAssets.navHoverBgDark
+                                : AppAssets.navHoverBgLight,
+                            height: 44,
+                            //* fit: contain keeps pattern from overwhelming the text
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                    //* Content row on top
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: SvgPicture.asset(
+                                _resolveIcon(widget.isActive, _isHovered, widget.isDark, widget.item),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Text(
+                                widget.item.label,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                softWrap: false,
+                                style: widget.isActive
+                                    ? AppTypography.bodySMedium.copyWith(
+                                        color: widget.item.isEmergency
+                                            ? AppColors.errorSolid
+                                            : AppColors.primaryDark)
+                                    : AppTypography.bodySMedium.copyWith(
+                                        color: widget.isDark
+                                            ? AppColors.darkMutedText
+                                            : AppColors.lightBodyText),
+                              ),
+                            ),
+                            //* Emergency alert dot
+                            if (widget.item.isEmergency && widget.hasAlert) ...[
+                              const SizedBox(width: 4),
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.errorSolid,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : //* Collapsed hover — perfectly centered square pill
+                SizedBox(
+                  width: 68,
+                  height: 48,
+                  child: Center(
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: widget.isActive
+                            ? (widget.item.isEmergency
+                                ? const Color(0x1AE94E31)
+                                : AppColors.selectedSidebarBg)
+                            : _isHovered
+                                ? (widget.isDark
+                                    ? AppColors.darkHoverSurface.withValues(alpha: 0.6)
+                                    : AppColors.lightElevatedCard)
+                                : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: SvgPicture.asset(
+                            _resolveIcon(widget.isActive, _isHovered, widget.isDark, widget.item),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+        ),
       ),
     );
   }

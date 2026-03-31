@@ -29,23 +29,21 @@ class SleepOverlay extends ConsumerWidget {
       onPanDown: (_) => _wakeUp(ref),
       child: MouseRegion(
         onHover: (_) => _wakeUp(ref),
-        child: AnimatedOpacity(
-          opacity: 0.85,
-          duration: const Duration(milliseconds: 500),
-          //* Dark overlay — farmer sees a nearly black screen
-          child: Container(
-            color: Colors.black,
-            //* Centered Tazrout logo — subtle presence during sleep
-            child: Center(
-              child: Opacity(
-                opacity: 0.15,
-                child: SvgPicture.asset(
-                  AppAssets.logoDarkDefault,
-                  height: 48,
+        child: TweenAnimationBuilder<double>(
+          duration: const Duration(milliseconds: 800),
+          tween: Tween<double>(begin: 0.0, end: 0.92),
+          builder: (context, opacity, child) {
+            return Opacity(
+              opacity: opacity,
+              child: Container(
+                color: Colors.black,
+                //* Centered Tazrout logo — subtle presence during sleep
+                child: const Center(
+                  child: _PulsingLogo(),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -56,5 +54,57 @@ class SleepOverlay extends ConsumerWidget {
       ref.read(isSleepingProvider.notifier).state = false;
       AppLogger.info('SLEEP', 'App woken by user input');
     }
+  }
+}
+
+//& _PulsingLogo Widget
+class _PulsingLogo extends StatefulWidget {
+  const _PulsingLogo();
+
+  @override
+  State<_PulsingLogo> createState() => _PulsingLogoState();
+}
+
+class _PulsingLogoState extends State<_PulsingLogo> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _animation = Tween<double>(begin: 0.1, end: 0.3).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _animation.value,
+          child: child,
+        );
+      },
+      child: SvgPicture.asset(
+        AppAssets.logoDarkIconDefault,
+        height: 80,
+      ),
+    );
   }
 }

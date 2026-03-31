@@ -108,8 +108,8 @@ class _NotificationToastState extends State<NotificationToast> with SingleTicker
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 12,
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],

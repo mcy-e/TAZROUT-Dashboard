@@ -227,4 +227,9 @@ abstract class AppAssets {
   static const String chartSoilLight = 'assets/images/chart_previews/variant=Soil_Graph_light.png';
   static const String chartWaterTempDark = 'assets/images/chart_previews/variant=Water_Temp_Graph_dark.png';
   static const String chartWaterTempLight = 'assets/images/chart_previews/variant=Water_Temp_Graph_light.png';
+
+  //& Nav Item Hover Background
+  //? Pill-shaped snowflake pattern used as sidebar hover overlay
+  static const String navHoverBgLight = 'assets/images/nav_hover/nav_hover_bg_light.svg';
+  static const String navHoverBgDark  = 'assets/images/nav_hover/nav_hover_bg_dark.svg';
 }

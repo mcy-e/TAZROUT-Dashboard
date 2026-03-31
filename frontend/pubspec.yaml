@@ -51,4 +51,5 @@ flutter:
       - assets/icons/Light/svg/app_icons/
       - assets/icons/Light/png/app_icons/
       - assets/images/chart_previews/
+      - assets/images/nav_hover/
       - .env
