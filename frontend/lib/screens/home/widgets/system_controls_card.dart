@@ -8,6 +8,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
@@ -74,18 +76,19 @@ class SystemControlsCard extends ConsumerWidget {
             const SizedBox(height: 16),
             //* Two full-width outlined buttons stacked vertically with 12px gap
             //* REBOOT button
-            _ControlButton(
-              // TODO :: Wire to MQTT topic: tazrout/system/control
-              label: 'REBOOT',
-              icon: PhosphorIcons.arrowCounterClockwise(),
-              onPressed: () => _showConfirmDialog(context, 'REBOOT'),
+            _AnimatedRebootButton(
+              onConfirmRequested: () => _showConfirmDialog(context, 'REBOOT'),
             ),
             const SizedBox(height: 12),
             //* SHUT DOWN button
             _ControlButton(
               // TODO :: Wire to MQTT topic: tazrout/system/control
               label: 'SHUT DOWN',
-              icon: PhosphorIcons.power(),
+              darkIcon: AppAssets.darkIconShutDownI,
+              lightIcon: AppAssets.lightIconShutDownI,
+              hoverDarkIcon: AppAssets.darkIconShutDownH,
+              hoverLightIcon: AppAssets.lightIconShutDownH,
+              hoverColor: AppColors.errorSolid,
               onPressed: () => _showConfirmDialog(context, 'SHUT DOWN'),
             ),
           ],
@@ -95,8 +98,8 @@ class SystemControlsCard extends ConsumerWidget {
   }
 
   //* On tap: show confirmation AlertDialog before logging the action
-  void _showConfirmDialog(BuildContext context, String action) {
-    showDialog(
+  Future<bool> _showConfirmDialog(BuildContext context, String action) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Confirm $action'),
@@ -104,7 +107,7 @@ class SystemControlsCard extends ConsumerWidget {
         actions: [
           //* Minimum 48px tap target for touch screen compatibility
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
               minimumSize: const Size(48, 48),
             ),
@@ -115,7 +118,7 @@ class SystemControlsCard extends ConsumerWidget {
             onPressed: () {
               //* Log the action
               AppLogger.info('SYSTEM', 'User triggered $action');
-              Navigator.pop(context);
+              Navigator.pop(context, true);
             },
             style: TextButton.styleFrom(
               minimumSize: const Size(48, 48),
@@ -125,17 +128,133 @@ class SystemControlsCard extends ConsumerWidget {
         ],
       ),
     );
+    return result ?? false;
+  }
+}
+
+class _AnimatedRebootButton extends StatefulWidget {
+  final Future<bool> Function() onConfirmRequested;
+
+  const _AnimatedRebootButton({required this.onConfirmRequested});
+
+  @override
+  State<_AnimatedRebootButton> createState() => _AnimatedRebootButtonState();
+}
+
+class _AnimatedRebootButtonState extends State<_AnimatedRebootButton> with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _spinController;
+
+  @override
+  void initState() {
+    super.initState();
+    _spinController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+  }
+
+  @override
+  void dispose() {
+    _spinController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    final confirmed = await widget.onConfirmRequested();
+    if (confirmed) {
+      _spinController.repeat();
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        _spinController.stop();
+        _spinController.reset();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final Color borderColor = _isHovered
+        ? AppColors.primary
+        : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider);
+    
+    final Color contentColor = _isHovered
+        ? AppColors.primary
+        : (isDark ? AppColors.darkBodyText : AppColors.lightBodyText);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: InkWell(
+        onTap: _handleTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          height: 48,
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              //* Spinning reboot icon using RotationTransition
+              RotationTransition(
+                turns: _spinController,
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 150),
+                    firstCurve: Curves.easeInOut,
+                    secondCurve: Curves.easeInOut,
+                    crossFadeState: _isHovered
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    firstChild: SvgPicture.asset(
+                      isDark ? AppAssets.darkIconRebootI : AppAssets.lightIconRebootI,
+                      height: 18,
+                      colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                    ),
+                    secondChild: SvgPicture.asset(
+                      isDark ? AppAssets.darkIconRebootH : AppAssets.lightIconRebootH,
+                      height: 18,
+                      colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'REBOOT',
+                style: AppTypography.bodySMedium.copyWith(
+                  color: contentColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
 class _ControlButton extends StatefulWidget {
   final String label;
-  final IconData icon;
+  final String darkIcon;
+  final String lightIcon;
+  final String hoverDarkIcon;
+  final String hoverLightIcon;
+  final Color hoverColor;
   final VoidCallback onPressed;
 
   const _ControlButton({
     required this.label,
-    required this.icon,
+    required this.darkIcon,
+    required this.lightIcon,
+    required this.hoverDarkIcon,
+    required this.hoverLightIcon,
+    required this.hoverColor,
     required this.onPressed,
   });
 
@@ -152,11 +271,11 @@ class _ControlButtonState extends State<_ControlButton> {
     
     //* Visual state driven by _isHovered OR press state
     final Color borderColor = _isHovered
-        ? AppColors.primary
+        ? widget.hoverColor
         : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider);
     
     final Color contentColor = _isHovered
-        ? AppColors.primary
+        ? widget.hoverColor
         : (isDark ? AppColors.darkBodyText : AppColors.lightBodyText);
 
     //* Dual input: MouseRegion for mouse hover, InkWell for touch press
@@ -169,23 +288,41 @@ class _ControlButtonState extends State<_ControlButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: double.infinity,
-          //* Minimum 48px tap target for touch screen compatibility
-          constraints: const BoxConstraints(minHeight: 48),
+          height: 48,
           decoration: BoxDecoration(
             border: Border.all(color: borderColor),
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(widget.icon, size: 20, color: contentColor),
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 150),
+                  firstCurve: Curves.easeInOut,
+                  secondCurve: Curves.easeInOut,
+                  crossFadeState: _isHovered
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: SvgPicture.asset(
+                    isDark ? widget.darkIcon : widget.lightIcon,
+                    height: 18,
+                    colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                  ),
+                  secondChild: SvgPicture.asset(
+                    isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                    height: 18,
+                    colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                  ),
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
-                widget.label,
-                style: AppTypography.bodyMBold.copyWith(
+                widget.label.toUpperCase(),
+                style: AppTypography.bodySMedium.copyWith(
                   color: contentColor,
-                  fontSize: 14,
                 ),
               ),
             ],

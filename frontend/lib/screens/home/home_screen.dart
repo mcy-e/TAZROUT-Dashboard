@@ -39,11 +39,11 @@ class HomeScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Expanded(child: SystemControlsCard()),
-                      const SizedBox(width: 16),
-                      const Expanded(child: WelcomeCard()),
-                      const SizedBox(width: 16),
-                      const Expanded(child: DidYouKnowCard()),
+                      const Expanded(flex: 1, child: SystemControlsCard()),
+                      const SizedBox(width: 12),
+                      const Expanded(flex: 2, child: WelcomeCard()),
+                      const SizedBox(width: 12),
+                      const Expanded(flex: 1, child: DidYouKnowCard()),
                     ],
                   ),
                 ),

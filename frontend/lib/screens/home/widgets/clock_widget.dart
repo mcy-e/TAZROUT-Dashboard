@@ -25,6 +25,7 @@ class ClockWidget extends StatefulWidget {
 class _ClockWidgetState extends State<ClockWidget> {
   late Timer _timer;
   late DateTime _currentTime;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -63,44 +64,59 @@ class _ClockWidgetState extends State<ClockWidget> {
           color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
         ),
       ),
-      child: Stack(
-        children: [
-          //* ClockWidget decorative accents:
-          //* TOP accent: AppAssets.symbolWisdom (the diamond/eye symbol)
-          //* height 36px, color AppColors.primary, opacity 0.35, positioned top-right
-          Positioned(
-            top: 12,
-            right: 12,
-            child: Opacity(
-              opacity: 0.35,
-              child: SvgPicture.asset(
-                AppAssets.symbolWisdom,
-                height: 36,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.primary,
-                  BlendMode.srcIn,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            children: [
+              //* ClockWidget decorative accents:
+              //* Top-right symbol — larger, animates on hover
+              Positioned(
+                top: 8, right: 8,
+                child: AnimatedRotation(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  turns: _isHovered ? 0.08 : 0.0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    opacity: _isHovered ? 0.45 : 0.20,
+                    child: SvgPicture.asset(
+                      AppAssets.symbolEye,
+                      height: 64,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          //* BOTTOM accent: AppAssets.symbolEye (smaller diamond)
-          //* height 24px, color AppColors.primary, opacity 0.35, positioned bottom-right
-          Positioned(
-            bottom: 12,
-            right: 12,
-            child: Opacity(
-              opacity: 0.35,
-              child: SvgPicture.asset(
-                AppAssets.symbolEye,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.primary,
-                  BlendMode.srcIn,
+              //* Bottom-left symbol — same asset, slightly smaller
+              Positioned(
+                bottom: 8, left: 8,
+                child: AnimatedRotation(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  turns: _isHovered ? -0.08 : 0.0,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeInOut,
+                    opacity: _isHovered ? 0.45 : 0.20,
+                    child: SvgPicture.asset(
+                      AppAssets.symbolEye,
+                      height: 56,
+                      colorFilter: const ColorFilter.mode(
+                        AppColors.primary,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          //* Main Content
+              //* Main Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -158,7 +174,9 @@ class _ClockWidgetState extends State<ClockWidget> {
               ],
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -177,11 +195,22 @@ class _ClockFacePainter extends CustomPainter {
     final centerY = size.height / 2;
     final radius = math.min(centerX, centerY);
 
+    //* Draw clock face background
+    if (!isDark) {
+      final path = Path()
+        ..addOval(Rect.fromCircle(center: Offset(centerX, centerY), radius: radius));
+      canvas.drawShadow(path, Colors.black.withValues(alpha: 0.1), 4.0, false);
+    }
+    final Paint facePaint = Paint()
+      ..color = isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(centerX, centerY), radius, facePaint);
+
     final Paint tickPaint = Paint()
       ..color = isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider
       ..strokeWidth = 2;
 
-    //* Draws circular face, tick marks at 12, 3, 6, 9 positions
+    //* Draws tick marks at 12, 3, 6, 9 positions
     for (var i = 0; i < 4; i++) {
       final angle = i * math.pi / 2;
       final start = Offset(
@@ -203,7 +232,7 @@ class _ClockFacePainter extends CustomPainter {
     final hourAngle = (hour + minute / 60) * math.pi / 6;
     final hourHandLength = radius * 0.5;
     final hourPaint = Paint()
-      ..color = isDark ? AppColors.darkBodyText : Colors.black
+      ..color = isDark ? AppColors.darkBodyText : Colors.black87
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(

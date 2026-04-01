@@ -6,8 +6,9 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
@@ -37,11 +38,10 @@ class PerformanceMonitorCard extends StatelessWidget {
             //* Header Row
             Row(
               children: [
-                //* Icon: green pulse/activity icon (PhosphorIcons.pulse, color AppColors.primary)
-                Icon(
-                  PhosphorIcons.pulse(),
-                  color: AppColors.primary,
-                  size: 24,
+                //* Icon: green pulse/activity icon
+                SvgPicture.asset(
+                  isDark ? AppAssets.darkIconPerformance : AppAssets.lightIconPerformance,
+                  height: 18,
                 ),
                 const SizedBox(width: 8),
                 //* Title
@@ -81,7 +81,10 @@ class PerformanceMonitorCard extends StatelessWidget {
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '42%',
                             accentColor: AppColors.primary,
-                            icon: PhosphorIcons.drop(),
+                            darkIcon: AppAssets.darkIconWaterI,
+                            lightIcon: AppAssets.lightIconWaterI,
+                            hoverDarkIcon: AppAssets.darkIconWaterH,
+                            hoverLightIcon: AppAssets.lightIconWaterH,
                             chartColor: AppColors.series1Primary,
                           ),
                         ),
@@ -94,7 +97,10 @@ class PerformanceMonitorCard extends StatelessWidget {
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '620 g/kg',
                             accentColor: AppColors.series2Blue,
-                            icon: PhosphorIcons.equalizer(),
+                            darkIcon: AppAssets.darkIconSoilIdle,
+                            lightIcon: AppAssets.lightIconSoilIdle,
+                            hoverDarkIcon: AppAssets.darkIconSoilH,
+                            hoverLightIcon: AppAssets.lightIconSoilH,
                             chartColor: AppColors.series2Blue,
                           ),
                         ),
@@ -113,7 +119,10 @@ class PerformanceMonitorCard extends StatelessWidget {
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '24°C',
                             accentColor: AppColors.errorSolid,
-                            icon: PhosphorIcons.thermometer(),
+                            darkIcon: AppAssets.darkIconTemperatureI,
+                            lightIcon: AppAssets.lightIconTemperatureI,
+                            hoverDarkIcon: AppAssets.darkIconTemperatureH,
+                            hoverLightIcon: AppAssets.lightIconTemperatureH,
                             chartColor: AppColors.errorSolid,
                           ),
                         ),
@@ -126,7 +135,10 @@ class PerformanceMonitorCard extends StatelessWidget {
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '45%',
                             accentColor: AppColors.series3Amber,
-                            icon: PhosphorIcons.cloud(),
+                            darkIcon: AppAssets.darkIconHumidityI,
+                            lightIcon: AppAssets.lightIconHumidityI,
+                            hoverDarkIcon: AppAssets.darkIconHumidityH,
+                            hoverLightIcon: AppAssets.lightIconHumidityH,
                             chartColor: AppColors.series3Amber,
                           ),
                         ),
@@ -156,103 +168,174 @@ class PerformanceMonitorCard extends StatelessWidget {
 }
 
 //& _MetricSubCard Widget
-class _MetricSubCard extends StatelessWidget {
+class _MetricSubCard extends StatefulWidget {
   final String label;
   final String value;
   final Color accentColor;
-  final IconData icon;
+  final String darkIcon;
+  final String lightIcon;
+  final String hoverDarkIcon;
+  final String hoverLightIcon;
   final Color chartColor;
 
   const _MetricSubCard({
     required this.label,
     required this.value,
     required this.accentColor,
-    required this.icon,
+    required this.darkIcon,
+    required this.lightIcon,
+    required this.hoverDarkIcon,
+    required this.hoverLightIcon,
     required this.chartColor,
   });
+
+  @override
+  State<_MetricSubCard> createState() => _MetricSubCardState();
+}
+
+class _MetricSubCardState extends State<_MetricSubCard> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     //* Log theme resolution
-    AppLogger.theme('MetricSubCard', chartColor.toString(), 'chart');
+    AppLogger.theme('MetricSubCard', widget.chartColor.toString(), 'chart');
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkElevatedCard : AppColors.lightElevatedCard,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      //* PerformanceMonitorCard metric sub-cards: if content overflows
-      //* on a smaller screen, wrap in SingleChildScrollView with
-      //* physics: const ClampingScrollPhysics()
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            //* Header: Label + Icon
-            Row(
-              children: [
-                Text(
-                  label,
-                  style: AppTypography.overlineXS.copyWith(
-                    color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkElevatedCard : AppColors.lightElevatedCard,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: _isHovered
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : [],
+        ),
+        //* PerformanceMonitorCard metric sub-cards: if content overflows
+        //* on a smaller screen, wrap in SingleChildScrollView with
+        //* physics: const ClampingScrollPhysics()
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              //* Header: Label + Icon
+              Row(
+                children: [
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 150),
+                    style: AppTypography.overlineXS.copyWith(
+                      color: _isHovered
+                        ? AppColors.primary
+                        : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
+                    ),
+                    child: Text(widget.label),
                   ),
-                ),
-                const Spacer(),
-                Icon(icon, size: 16, color: accentColor),
-              ],
-            ),
-            const SizedBox(height: 4),
-            //* Value
-            Text(
-              value,
-              style: AppTypography.bodyMBold.copyWith(color: accentColor),
-            ),
-            const SizedBox(height: 8),
-            //* Chart area
-            SizedBox(
-              height: 60,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      // TODO :: Replace static chart data with real time-series from API
-                      spots: const [
-                        FlSpot(0, 3),
-                        FlSpot(1, 4),
-                        FlSpot(2, 3.5),
-                        FlSpot(3, 5),
-                        FlSpot(4, 4),
-                        FlSpot(5, 6),
-                        FlSpot(6, 5),
-                        FlSpot(7, 7),
-                      ],
-                      isCurved: true,
-                      color: chartColor,
-                      barWidth: 2,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: chartColor.withValues(alpha: 0.15),
+                  const Spacer(),
+                  //* Smooth icon transition between idle and hover state
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 200),
+                      firstCurve: Curves.easeInOut,
+                      secondCurve: Curves.easeInOut,
+                      crossFadeState: _isHovered
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: SvgPicture.asset(
+                        isDark ? widget.darkIcon : widget.lightIcon,
+                        height: 18,
+                      ),
+                      secondChild: SvgPicture.asset(
+                        isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                        height: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              //* Value
+              Text(
+                widget.value,
+                style: AppTypography.bodyMBold.copyWith(color: widget.accentColor),
+              ),
+              const SizedBox(height: 8),
+              //* Chart area
+              SizedBox(
+                height: 60,
+                //* Chart area with texture background
+                child: Stack(
+                  children: [
+                    //* Graph background texture
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          isDark
+                            ? AppAssets.graphBgDarkPng
+                            : AppAssets.graphBgLightPng,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    //* fl_chart on top of texture
+                    Positioned.fill(
+                      child: LineChart(
+                        LineChartData(
+                          gridData: const FlGridData(show: false),
+                          titlesData: const FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              // TODO :: Replace static chart data with real time-series from API
+                              spots: const [
+                                FlSpot(0, 3),
+                                FlSpot(1, 4),
+                                FlSpot(2, 3.5),
+                                FlSpot(3, 5),
+                                FlSpot(4, 4),
+                                FlSpot(5, 6),
+                                FlSpot(6, 5),
+                                FlSpot(7, 7),
+                              ],
+                              isCurved: true,
+                              color: widget.chartColor,
+                              barWidth: 2,
+                              isStrokeCapRound: true,
+                              dotData: const FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                color: widget.chartColor.withValues(alpha: 0.15),
+                              ),
+                            ),
+                          ],
+                          minX: 0,
+                          maxX: 7,
+                          minY: 0,
+                          maxY: 10,
+                        ),
                       ),
                     ),
                   ],
-                  minX: 0,
-                  maxX: 7,
-                  minY: 0,
-                  maxY: 10,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

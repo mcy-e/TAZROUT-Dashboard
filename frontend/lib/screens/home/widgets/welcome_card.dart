@@ -6,15 +6,20 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
 //& WelcomeCard
-class WelcomeCard extends StatelessWidget {
-  //* Stack layout: background pattern + foreground content
+class WelcomeCard extends StatefulWidget {
   const WelcomeCard({super.key});
+
+  @override
+  State<WelcomeCard> createState() => _WelcomeCardState();
+}
+
+class _WelcomeCardState extends State<WelcomeCard> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -30,58 +35,90 @@ class WelcomeCard extends StatelessWidget {
           color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
         ),
       ),
-      child: Stack(
-        children: [
-          //* WelcomeCard background pattern: Use AppAssets.patternCrossDiamondGrid at opacity 0.06
-          //* The pattern runs horizontally across the card background
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.06,
-              child: SvgPicture.asset(
-                AppAssets.patternCrossDiamondGrid,
-                fit: BoxFit.cover,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            //* Bottom glow — stronger on hover
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.bottomCenter,
+                    radius: 1.2,
+                    colors: [
+                      AppColors.primary.withValues(alpha: _isHovered ? 0.18 : 0.07),
+                      AppColors.primary.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          //* Foreground Column (centered)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  //* Green check circle icon (PhosphorIcons.checkCircle, size 32, color AppColors.primary)
-                  Icon(
-                    PhosphorIcons.checkCircle(PhosphorIconsStyle.fill),
-                    size: 32,
-                    color: AppColors.primary,
+            //* symbolWisdom top-left — always visible, brightens on hover
+            Positioned(
+              top: 12,
+              left: 12,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                opacity: _isHovered ? 0.55 : 0.20,
+                child: SvgPicture.asset(
+                  AppAssets.symbolWisdom,
+                  height: 56,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.primary,
+                    BlendMode.srcIn,
                   ),
-                  const SizedBox(height: 12),
-                  //* Welcome title
-                  // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
-                  Text(
-                    'Welcome Back!',
-                    style: AppTypography.headingM.copyWith(
-                      color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  //* Status description text
-                  // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
-                  Text(
-                    'All agricultural systems are running within optimal parameters today.',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.bodySRegular.copyWith(
-                      color: isDark ? AppColors.darkMutedText : AppColors.lightBodyText,
-                    ),
-                  ),
-                  //* Static status: healthy
-                  // TODO :: Drive icon color and subtitle from MQTT summary
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+            //* Main content — always on top, centered
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    //* Green check circle icon
+                    SvgPicture.asset(
+                      isDark ? AppAssets.darkIconChecked : AppAssets.lightIconChecked,
+                      height: 32,
+                    ),
+                    const SizedBox(height: 12),
+                    //* Welcome title
+                    // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
+                    Text(
+                      'Welcome Back!',
+                      style: AppTypography.headingM.copyWith(
+                        color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    //* Status description text
+                    // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
+                    Text(
+                      'All agricultural systems are running within optimal parameters today.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySRegular.copyWith(
+                        color: isDark ? AppColors.darkMutedText : AppColors.lightBodyText,
+                      ),
+                    ),
+                    //* Static status: healthy
+                    // TODO :: Drive icon color and subtitle from MQTT summary
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
