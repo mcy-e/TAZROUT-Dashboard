@@ -5,10 +5,9 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../models/ai_decision_model.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 
 //& DecisionLogsCard Widget
 class DecisionLogsCard extends StatefulWidget {
@@ -22,59 +21,55 @@ class DecisionLogsCard extends StatefulWidget {
 class _DecisionLogsCardState extends State<DecisionLogsCard> {
   String _selectedFilter = 'All';
 
+  static const List<Map<String, String>> _allLogs = [
+    {
+      'id': 'DEC-2024-001',
+      'date': 'Oct 15, 2024',
+      'type': 'IRRIGATION',
+      'details': 'Watered Zones A, B (20 mins)',
+    },
+    {
+      'id': 'WRN-2024-089',
+      'date': 'Oct 14, 2024',
+      'type': 'ALERT',
+      'details': 'High temp variance detected in Zone C',
+    },
+    {
+      'id': 'ADV-2024-012',
+      'date': 'Oct 14, 2024',
+      'type': 'ADVICE',
+      'details': 'Optimal time to check NPK levels',
+    },
+    {
+      'id': 'DEC-2024-002',
+      'date': 'Oct 13, 2024',
+      'type': 'IRRIGATION',
+      'details': 'Watered Zone F (15 mins)',
+    },
+    {
+      'id': 'ERR-2024-005',
+      'date': 'Oct 12, 2024',
+      'type': 'CRITICAL',
+      'details': 'Valve Failure detected in Zone B',
+    },
+  ];
+
+  List<Map<String, String>> get _filteredLogs {
+    if (_selectedFilter == 'All') return _allLogs;
+    //* Map button label to type value
+    final map = {
+      'Irrigation': 'IRRIGATION',
+      'Alerts': 'ALERT',
+      'Advice': 'ADVICE',
+    };
+    final target = map[_selectedFilter];
+    if (target == null) return _allLogs;
+    return _allLogs.where((log) => log['type'] == target).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    //* Static data — 5 rows
-    // TODO :: Replace with real MQTT data from topic: tazrout/ai/decisions
-    final List<AiDecisionModel> allLogs = [
-      AiDecisionModel(
-        decisionId: 'DEC-2024-001',
-        decisionDate: DateTime(2024, 10, 15),
-        type: DecisionType.irrigation,
-        affectedZones: ['Zone A', 'Zone B'],
-        description: 'Watered Zones A,B (20 mins)',
-        notes: '',
-        farmerAdvice: '',
-      ),
-      AiDecisionModel(
-        decisionId: 'WRN-2024-089',
-        decisionDate: DateTime(2024, 10, 14),
-        type: DecisionType.alert,
-        affectedZones: ['Zone C'],
-        description: 'High temp variance in Zone C',
-        notes: '',
-        farmerAdvice: '',
-      ),
-      AiDecisionModel(
-        decisionId: 'ADV-2024-012',
-        decisionDate: DateTime(2024, 10, 14),
-        type: DecisionType.advice,
-        affectedZones: [],
-        description: 'Optimal time to check NPK levels',
-        notes: '',
-        farmerAdvice: '',
-      ),
-      AiDecisionModel(
-        decisionId: 'DEC-2024-002',
-        decisionDate: DateTime(2024, 10, 13),
-        type: DecisionType.irrigation,
-        affectedZones: ['Zone F'],
-        description: 'Watered Zone F (15 mins)',
-        notes: '',
-        farmerAdvice: '',
-      ),
-      AiDecisionModel(
-        decisionId: 'ERR-2024-005',
-        decisionDate: DateTime(2024, 10, 12),
-        type: DecisionType.critical,
-        affectedZones: ['Zone B'],
-        description: 'Valve Failure in Zone B',
-        notes: '',
-        farmerAdvice: '',
-      ),
-    ];
 
     return Card(
       margin: EdgeInsets.zero,
@@ -134,12 +129,14 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
             Divider(color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider, height: 1),
             //* Scrollable Table Body
             Expanded(
-              child: ListView.builder(
-                itemCount: allLogs.length,
-                itemBuilder: (context, index) {
-                  return _DecisionLogRow(log: allLogs[index]);
-                },
-              ),
+              child: _filteredLogs.isEmpty
+                  ? const EmptyStateWidget()
+                  : ListView.builder(
+                      itemCount: _filteredLogs.length,
+                      itemBuilder: (context, index) {
+                        return _DecisionLogRow(log: _filteredLogs[index]);
+                      },
+                    ),
             ),
           ],
         ),
@@ -179,7 +176,9 @@ class _FilterTabs extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 32),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.primary.withValues(alpha: 0.0),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Center(
@@ -187,7 +186,9 @@ class _FilterTabs extends StatelessWidget {
                     filter,
                     style: AppTypography.captionMedium.copyWith(
                       color: isSelected
-                          ? Colors.white
+                          ? (isDark
+                              ? AppColors.darkPrimaryText
+                              : AppColors.lightPrimaryText)
                           : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
                       fontSize: 11,
                     ),
@@ -204,7 +205,7 @@ class _FilterTabs extends StatelessWidget {
 
 //& _DecisionLogRow Widget
 class _DecisionLogRow extends StatefulWidget {
-  final AiDecisionModel log;
+  final Map<String, String> log;
 
   const _DecisionLogRow({required this.log});
 
@@ -215,10 +216,27 @@ class _DecisionLogRow extends StatefulWidget {
 class _DecisionLogRowState extends State<_DecisionLogRow> {
   bool _isHovered = false;
 
+  Color _typeColor(String type) {
+    switch (type) {
+      case 'IRRIGATION':
+        return AppColors.primary;
+      case 'ALERT':
+        return AppColors.warningSolid;
+      case 'ADVICE':
+        return AppColors.infoSolid;
+      default:
+        return AppColors.errorSolid;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateStr = DateFormat('MMM dd yyyy').format(widget.log.decisionDate);
+    final id = widget.log['id'] ?? '';
+    final date = widget.log['date'] ?? '';
+    final type = widget.log['type'] ?? '';
+    final details = widget.log['details'] ?? '';
+    final typeColor = _typeColor(type);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -229,7 +247,9 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
         decoration: BoxDecoration(
           color: _isHovered
               ? (isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard)
-              : Colors.transparent,
+              : (isDark
+                  ? AppColors.darkHoverSurface.withValues(alpha: 0.0)
+                  : AppColors.lightElevatedCard.withValues(alpha: 0.0)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -238,7 +258,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
             Expanded(
               flex: 2,
               child: Text(
-                widget.log.decisionId,
+                id,
                 style: AppTypography.captionMedium.copyWith(
                   color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                 ),
@@ -248,7 +268,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
             Expanded(
               flex: 2,
               child: Text(
-                dateStr,
+                date,
                 style: AppTypography.captionMedium.copyWith(
                   color: AppColors.darkMutedText,
                 ),
@@ -262,13 +282,13 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: widget.log.color.withValues(alpha: 0.1),
+                    color: typeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    widget.log.label,
+                    type,
                     style: AppTypography.overlineXS.copyWith(
-                      color: widget.log.color,
+                      color: typeColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -279,7 +299,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
             Expanded(
               flex: 3,
               child: Text(
-                widget.log.description,
+                details,
                 style: AppTypography.captionMedium.copyWith(
                   color: isDark ? AppColors.darkBodyText : AppColors.lightBodyText,
                 ),

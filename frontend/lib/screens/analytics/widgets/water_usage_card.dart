@@ -10,13 +10,34 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 //& WaterUsageCard Widget
-class WaterUsageCard extends StatelessWidget {
-  //* StatelessWidget — displays water usage bar chart with period toggle
+class WaterUsageCard extends StatefulWidget {
   const WaterUsageCard({super.key});
+
+  @override
+  State<WaterUsageCard> createState() => _WaterUsageCardState();
+}
+
+class _WaterUsageCardState extends State<WaterUsageCard> {
+  String _selectedPeriod = 'Month';
+
+  static const Map<String, List<double>> _periodData = {
+    'Day': [20, 35, 28, 42, 38],
+    'Week': [120, 180, 150, 200, 170],
+    'Month': [480, 620, 550, 410, 700],
+  };
+
+  static const Map<String, List<String>> _periodLabels = {
+    'Day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    'Week': ['W1', 'W2', 'W3', 'W4', 'W5'],
+    'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+  };
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final data = _periodData[_selectedPeriod]!;
+    final labels = _periodLabels[_selectedPeriod]!;
+    final maxY = data.reduce((a, b) => a > b ? a : b) * 1.2;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -42,7 +63,10 @@ class WaterUsageCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                const _PeriodToggle(),
+                _PeriodToggle(
+                  selectedPeriod: _selectedPeriod,
+                  onPeriodChanged: (period) => setState(() => _selectedPeriod = period),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -51,7 +75,7 @@ class WaterUsageCard extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: 700,
+                  maxY: maxY,
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
@@ -73,19 +97,19 @@ class WaterUsageCard extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
-                          if (value.toInt() >= 0 && value.toInt() < months.length) {
+                          final index = value.toInt();
+                          if (index >= 0 && index < labels.length) {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                months[value.toInt()],
+                                labels[index],
                                 style: AppTypography.overlineXS.copyWith(
                                   color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                                 ),
                               ),
                             );
                           }
-                          return const Text('');
+                          return const SizedBox.shrink();
                         },
                         reservedSize: 28,
                       ),
@@ -97,13 +121,9 @@ class WaterUsageCard extends StatelessWidget {
                   gridData: const FlGridData(show: false),
                   borderData: FlBorderData(show: false),
                   barGroups: [
-                    //* Static data 5 bars: Jan=280 Feb=400 Mar=520 Apr=350 May=600
+                    //* Period-driven static data (5 bars per period)
                     // TODO :: Replace with real MQTT data from topic: tazrout/analytics/water-usage
-                    _buildBarGroup(0, 280),
-                    _buildBarGroup(1, 400),
-                    _buildBarGroup(2, 520),
-                    _buildBarGroup(3, 350),
-                    _buildBarGroup(4, 600),
+                    for (int i = 0; i < data.length; i++) _buildBarGroup(i, data[i]),
                   ],
                 ),
               ),
@@ -136,48 +156,48 @@ class WaterUsageCard extends StatelessWidget {
 }
 
 //& _PeriodToggle Widget
-class _PeriodToggle extends StatefulWidget {
-  const _PeriodToggle();
+class _PeriodToggle extends StatelessWidget {
+  final String selectedPeriod;
+  final ValueChanged<String> onPeriodChanged;
 
-  @override
-  State<_PeriodToggle> createState() => _PeriodToggleState();
-}
-
-class _PeriodToggleState extends State<_PeriodToggle> {
-  String _selectedPeriod = 'Month';
+  const _PeriodToggle({
+    required this.selectedPeriod,
+    required this.onPeriodChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildToggleButton('Day'),
+        _buildToggleButton(context, isDark, 'Day'),
         const SizedBox(width: 4),
-        _buildToggleButton('Month'),
+        _buildToggleButton(context, isDark, 'Week'),
         const SizedBox(width: 4),
-        _buildToggleButton('Year'),
+        _buildToggleButton(context, isDark, 'Month'),
       ],
     );
   }
 
-  Widget _buildToggleButton(String period) {
-    final isSelected = _selectedPeriod == period;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  Widget _buildToggleButton(BuildContext context, bool isDark, String period) {
+    final isSelected = selectedPeriod == period;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: InkWell(
         onTap: () {
-          setState(() => _selectedPeriod = period);
-          // TODO :: Emit period change to trigger MQTT re-fetch
+          onPeriodChanged(period);
         },
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           constraints: const BoxConstraints(minWidth: 48, minHeight: 32),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.0),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Center(
@@ -185,7 +205,7 @@ class _PeriodToggleState extends State<_PeriodToggle> {
               period,
               style: AppTypography.captionMedium.copyWith(
                 color: isSelected
-                    ? Colors.white
+                    ? (isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText)
                     : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
                 fontSize: 11,
               ),

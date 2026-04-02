@@ -42,7 +42,7 @@ class AnalyticsScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       //* Row of Observation + Recommendation
                       const SizedBox(
-                        height: 120,
+                        height: 140,
                         child: Row(
                           children: [
                             Expanded(child: ObservationCard()),
