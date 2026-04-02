@@ -5,7 +5,8 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -48,18 +49,32 @@ class ZoneValveBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          //* Icon(isValveOpen ? PhosphorIcons.drop : PhosphorIcons.lock)
-          Icon(
-            isValveOpen ? PhosphorIcons.drop() : PhosphorIcons.lock(),
-            size: 16,
-            color: isValveOpen ? AppColors.series2Blue : AppColors.darkMutedText,
-          ),
+          //* Valve icon
+          isValveOpen
+              ? SvgPicture.asset(
+                  isDark ? AppAssets.darkIconWaterI : AppAssets.lightIconWaterI,
+                  height: 16,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.series2Blue,
+                    BlendMode.srcIn,
+                  ),
+                )
+              : SvgPicture.asset(
+                  isDark ? AppAssets.darkIconWaterValveClosed : AppAssets.lightIconWaterValveClosed,
+                  height: 16,
+                  colorFilter: ColorFilter.mode(
+                    isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                    BlendMode.srcIn,
+                  ),
+                ),
           const SizedBox(width: 6),
           //* Text(isValveOpen ? "Open" : "Closed") AppTypography.bodySMedium
           Text(
             isValveOpen ? 'Open' : 'Closed',
             style: AppTypography.bodySMedium.copyWith(
-              color: isValveOpen ? AppColors.series2Blue : AppColors.darkMutedText,
+              color: isValveOpen 
+                  ? AppColors.series2Blue 
+                  : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
             ),
           ),
         ],

@@ -1,4 +1,4 @@
-//? Individual zone zone card — collapsed shows logo + Show stats button.
+//? Individual zone card — collapsed shows symbol + Show stats button.
 //? Expanded shows device state badge, sensor stats, valve bar.
 //? Online cards: green top border accent (3px).
 //? Offline cards: red top border accent (3px).
@@ -33,6 +33,8 @@ class ZoneCard extends StatefulWidget {
 class _ZoneCardState extends State<ZoneCard> {
   bool _isExpanded = false;
   bool _isHovered = false;
+  bool _showStatsHovered = false;
+  bool _hideStatsHovered = false;
 
   @override
   Widget build(BuildContext context) {
@@ -57,32 +59,65 @@ class _ZoneCardState extends State<ZoneCard> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovered
-                  ? AppColors.primary
+                  ? (widget.zone.isOnline ? AppColors.primary : AppColors.errorSolid)
                   : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider),
               width: 1,
             ),
             boxShadow: _isHovered
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
+                      color: (widget.zone.isOnline
+                              ? AppColors.primary
+                              : AppColors.errorSolid)
+                          .withValues(alpha: 0.15),
+                      blurRadius: 16,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ]
                 : [],
           ),
           clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              //* Top border accent strip (3px)
-              Container(
-                height: 3,
-                width: double.infinity,
-                color: widget.zone.isOnline ? AppColors.primary : AppColors.errorSolid,
+              //* Base layout: top border + crossfading content
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  //* Top border accent strip (3px)
+                  Container(
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: widget.zone.isOnline
+                          ? AppColors.primary
+                          : AppColors.errorSolid,
+                    ),
+                  ),
+                  //* Crossfade between Collapsed and Expanded
+                  AnimatedCrossFade(
+                    firstChild: _buildCollapsedBase(isDark),
+                    secondChild: _buildExpandedBase(isDark),
+                    crossFadeState: _isExpanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 300),
+                  ),
+                ],
               ),
-              //* Content based on state
-              if (!_isExpanded) _buildCollapsed(isDark) else _buildExpanded(isDark),
+
+
+
+              //* Floating symbol — only visible in collapsed state
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    opacity: _isExpanded ? 0.0 : 1.0,
+                    child: _buildFloatingSymbol(),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -91,13 +126,14 @@ class _ZoneCardState extends State<ZoneCard> {
   }
 
   //* Collapsed State Layout
-  Widget _buildCollapsed(bool isDark) {
+  Widget _buildCollapsedBase(bool isDark) {
+    final isOnline = widget.zone.isOnline;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          //* Text(zoneName) AppTypography.headingS
+          //* Zone name text
           Text(
             widget.zone.zoneName,
             style: AppTypography.headingS.copyWith(
@@ -105,39 +141,69 @@ class _ZoneCardState extends State<ZoneCard> {
             ),
           ),
           const SizedBox(height: 16),
-          //* SvgPicture.asset(AppAssets.symbolWisdom)
-          SvgPicture.asset(
-            AppAssets.symbolWisdom,
-            height: 64,
-            colorFilter: ColorFilter.mode(
-              isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
-              BlendMode.srcIn,
-            ),
-          ),
+          //* Placeholder matching the floating symbol height
+          const SizedBox(height: 88),
           const SizedBox(height: 16),
-          //* Show stats OutlinedButton full width
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: OutlinedButton(
-              onPressed: () {
-                setState(() => _isExpanded = true);
-                AppLogger.nav('ZONES', 'Expanded zone ${widget.zone.zoneId}');
-              },
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                  color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
+          //* Show stats button with pattern overlay on hover
+          MouseRegion(
+            onEnter: (_) => setState(() => _showStatsHovered = true),
+            onExit: (_) => setState(() => _showStatsHovered = false),
+            child: Stack(
+              children: [
+                //* Pattern overlay gently zooms and fades in to match button dimensions exactly
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutBack,
+                    opacity: _showStatsHovered ? 1.0 : 0.0,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      scale: _showStatsHovered ? 1.0 : 0.85,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: IgnorePointer(
+                          child: SvgPicture.asset(
+                            isDark
+                                ? (isOnline ? AppAssets.showStatsNavActiveDark : AppAssets.showStatsNavInactiveDark)
+                                : (isOnline ? AppAssets.showStatsNavActiveLight : AppAssets.showStatsNavInactiveLight),
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                //* The OutlineButton is layered on top so text remains crisp and clickable
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _isExpanded = true),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: isOnline ? AppColors.primary : AppColors.errorSolid,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      foregroundColor: isOnline ? AppColors.primary : AppColors.errorSolid,
+                      overlayColor: Colors.transparent,
+                      backgroundColor: _showStatsHovered
+                          ? (isOnline
+                              ? AppColors.primary.withValues(alpha: 0.06)
+                              : AppColors.errorSolid.withValues(alpha: 0.06))
+                          : Colors.transparent,
+                    ),
+                    child: Text(
+                      'Show stats',
+                      style: AppTypography.bodySMedium.copyWith(
+                        color: isOnline ? AppColors.primary : AppColors.errorSolid,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                'SHOW STATS',
-                style: AppTypography.bodySMedium.copyWith(
-                  color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                ),
-              ),
+              ],
             ),
           ),
         ],
@@ -146,74 +212,179 @@ class _ZoneCardState extends State<ZoneCard> {
   }
 
   //* Expanded State Layout
-  Widget _buildExpanded(bool isDark) {
+  Widget _buildExpandedBase(bool isDark) {
+    final isOnline = widget.zone.isOnline;
+    final color = isOnline ? AppColors.primary : AppColors.errorSolid;
+    //* Use default symbol asset for the inline expanded header decoration
+    final inlineSymbol = isOnline
+        ? AppAssets.symbolFertilityDefault
+        : AppAssets.symbolEnFertilityDefault;
+
     return Column(
       children: [
+        //* Header Row: zone name + inline aligned symbol + hide stats button
         Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              //* Row: Text(zoneName) | Spacer() | Hide stats button
-              Row(
-                children: [
-                  Text(
-                    widget.zone.zoneName,
-                    style: AppTypography.headingS.copyWith(
-                      color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                    ),
-                  ),
-                  const Spacer(),
-                  //* Hide stats OutlinedButton small
-                  SizedBox(
-                    height: 32,
-                    child: OutlinedButton(
-                      onPressed: () => setState(() => _isExpanded = false),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: widget.zone.isOnline ? AppColors.primary : AppColors.errorSolid,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: Text(
-                        'HIDE',
-                        style: AppTypography.overlineXS.copyWith(
-                          color: widget.zone.isOnline ? AppColors.primary : AppColors.errorSolid,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              //* Zone name
+              Text(
+                widget.zone.zoneName,
+                style: AppTypography.headingS.copyWith(
+                  color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                ),
               ),
-              const SizedBox(height: 12),
-              //* Row: Badge | Stats
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //* Left: ZoneDeviceBadge(isOnline)
-                  ZoneDeviceBadge(isOnline: widget.zone.isOnline),
-                  const Spacer(),
-                  //* Right: ZoneStatsRow(temperature, moisture, waterLevel)
-                  ZoneStatsRow(
-                    temperature: widget.zone.temperature,
-                    moisture: widget.zone.moisture,
-                    waterLevel: widget.zone.waterLevel,
-                    isOnline: widget.zone.isOnline,
-                  ),
-                ],
+              const SizedBox(width: 8),
+              //* Small symbol inline — naturally aligned with the text baseline
+              SvgPicture.asset(
+                inlineSymbol,
+                height: 18,
+                colorFilter: ColorFilter.mode(
+                  color.withValues(alpha: 0.45),
+                  BlendMode.srcIn,
+                ),
+              ),
+              const Spacer(),
+              //* Hide stats button with hover pattern
+              _buildHideStatsButton(isDark),
+            ],
+          ),
+        ),
+        //* Device badge + stats row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ZoneDeviceBadge(isOnline: widget.zone.isOnline),
+              const Spacer(),
+              ZoneStatsRow(
+                temperature: widget.zone.temperature,
+                moisture: widget.zone.moisture,
+                waterLevel: widget.zone.waterLevel,
+                isOnline: widget.zone.isOnline,
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        //* ZoneValveBar(isValveOpen, isOnline)
         ZoneValveBar(
           isValveOpen: widget.zone.isValveOpen,
           isOnline: widget.zone.isOnline,
         ),
       ],
+    );
+  }
+
+  //* Hide stats button — hover background + pattern overlay, tinted by status
+  Widget _buildHideStatsButton(bool isDark) {
+    final isOnline = widget.zone.isOnline;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hideStatsHovered = true),
+      onExit: (_) => setState(() => _hideStatsHovered = false),
+      child: Stack(
+        children: [
+          //* Pattern overlay gently zooms and fades in to match button dimensions exactly
+          Positioned.fill(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              opacity: _hideStatsHovered ? 1.0 : 0.0,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                scale: _hideStatsHovered ? 1.0 : 0.85,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: IgnorePointer(
+                    child: SvgPicture.asset(
+                      isDark
+                          ? (isOnline ? AppAssets.showStatsNavActiveDark : AppAssets.showStatsNavInactiveDark)
+                          : (isOnline ? AppAssets.showStatsNavActiveLight : AppAssets.showStatsNavInactiveLight),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          //* Button on top
+          OutlinedButton(
+            onPressed: () => setState(() => _isExpanded = false),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                color: isOnline ? AppColors.primary : AppColors.errorSolid,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              foregroundColor: isOnline ? AppColors.primary : AppColors.errorSolid,
+              overlayColor: Colors.transparent,
+              backgroundColor: _hideStatsHovered
+                  ? (isOnline
+                      ? AppColors.primary.withValues(alpha: 0.06)
+                      : AppColors.errorSolid.withValues(alpha: 0.06))
+                  : Colors.transparent,
+            ),
+            child: Text(
+              'Hide stats',
+              style: AppTypography.overlineS.copyWith(
+                color: isOnline ? AppColors.primary : AppColors.errorSolid,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //* Floating symbol — centered in collapsed card, fades out when expanding
+  Widget _buildFloatingSymbol() {
+    return Align(
+      alignment: Alignment.center,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 84),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          height: 56,
+          child: _buildAnimatedSymbol(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedSymbol() {
+    final color = widget.zone.isOnline ? AppColors.primary : AppColors.errorSolid;
+    final defaultAsset = widget.zone.isOnline
+        ? AppAssets.symbolFertilityDefault
+        : AppAssets.symbolEnFertilityDefault;
+    final hoverAsset = widget.zone.isOnline
+        ? AppAssets.symbolFertilityHover
+        : AppAssets.symbolEnFertilityHover;
+
+    return AnimatedRotation(
+      //* Offline symbols revolve smoothly half a turn when hovered
+      turns: (_isHovered && !widget.zone.isOnline) ? 0.5 : 0.0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: AnimatedCrossFade(
+        firstChild: SvgPicture.asset(
+          defaultAsset,
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+        ),
+        secondChild: SvgPicture.asset(
+          hoverAsset,
+          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+        ),
+        crossFadeState: _isHovered
+            ? CrossFadeState.showSecond
+            : CrossFadeState.showFirst,
+        duration: const Duration(milliseconds: 250),
+      ),
     );
   }
 }

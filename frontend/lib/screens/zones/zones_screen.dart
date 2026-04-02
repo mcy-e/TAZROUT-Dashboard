@@ -85,19 +85,25 @@ class ZonesScreen extends StatelessWidget {
     //* Layout: Padding(24) → GridView.builder
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: GridView.builder(
-        padding: const EdgeInsets.all(24),
-        itemCount: zones.length,
-        //* SliverGridDelegateWithFixedCrossAxisCount
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          //* childAspectRatio: 0.85 ← collapsed default ratio
-          childAspectRatio: 0.85,
-        ),
-        itemBuilder: (context, index) {
-          return ZoneCard(zone: zones[index]);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          //* subtract 24px padding on each side, then 2 gaps of 16px between 3 columns
+          final availableWidth = constraints.maxWidth - 48;
+          final cardWidth = (availableWidth - 32) / 3;
+          
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: zones.map((zone) {
+                return SizedBox(
+                  width: cardWidth,
+                  child: ZoneCard(zone: zone),
+                );
+              }).toList(),
+            ),
+          );
         },
       ),
     );

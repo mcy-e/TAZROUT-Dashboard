@@ -228,8 +228,21 @@ abstract class AppAssets {
   static const String chartWaterTempDark = 'assets/images/chart_previews/variant=Water_Temp_Graph_dark.png';
   static const String chartWaterTempLight = 'assets/images/chart_previews/variant=Water_Temp_Graph_light.png';
 
+  //& Chart Graph Background Textures
+  //? Grid texture used as background inside metric sub-card charts
+  static const String graphBgDark  = 'assets/images/chart_previews/graph_bg_dark.svg';
+  static const String graphBgDarkPng  = 'assets/images/chart_previews/graph_bg_dark.png';
+  static const String graphBgLight = 'assets/images/chart_previews/graph_bg_light.svg';
+  static const String graphBgLightPng = 'assets/images/chart_previews/graph_bg_light.png';
+
   //& Nav Item Hover Background
   //? Pill-shaped snowflake pattern used as sidebar hover overlay
   static const String navHoverBgLight = 'assets/images/nav_hover/nav_hover_bg_light.svg';
   static const String navHoverBgDark  = 'assets/images/nav_hover/nav_hover_bg_dark.svg';
+
+  //& Show Stats Button Hover Patterns
+  static const String showStatsNavActiveLight = 'assets/images/show_satas_nav/show_satas_nav_active_light.svg';
+  static const String showStatsNavInactiveLight = 'assets/images/show_satas_nav/show_satas_nav_inactive_light.svg';
+  static const String showStatsNavActiveDark = 'assets/images/show_satas_nav/show_satas_nav_active_dark.svg';
+  static const String showStatsNavInactiveDark = 'assets/images/show_satas_nav/show_satas_nav_inactive_dark.svg';
 }

@@ -4,7 +4,8 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
@@ -46,11 +47,20 @@ class ZoneDeviceBadge extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              //* Icon(isOnline ? PhosphorIcons.wifiHigh : PhosphorIcons.wifiSlash)
-              Icon(
-                isOnline ? PhosphorIcons.wifiHigh() : PhosphorIcons.wifiSlash(),
-                size: 16,
-                color: isOnline ? AppColors.primary : AppColors.errorSolid,
+              //* SvgPicture.asset based on status and theme
+              SvgPicture.asset(
+                isOnline
+                    ? (isDark
+                        ? AppAssets.darkIconConnectionState
+                        : AppAssets.lightIconConnectionState)
+                    : (isDark
+                        ? AppAssets.darkIconConnectionStateClosed
+                        : AppAssets.lightIconConnectionStateClosed),
+                height: 16,
+                colorFilter: ColorFilter.mode(
+                  isOnline ? AppColors.primary : AppColors.errorSolid,
+                  BlendMode.srcIn,
+                ),
               ),
               const SizedBox(width: 6),
               //* Text(isOnline ? "Online" : "Offline") AppTypography.bodySMedium
