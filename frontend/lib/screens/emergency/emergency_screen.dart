@@ -6,7 +6,8 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import 'widgets/zone_status_grid.dart';
@@ -46,18 +47,35 @@ class EmergencyScreen extends StatelessWidget {
             SizedBox(
               height: 64,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(PhosphorIcons.warning(), color: AppColors.errorSolid, size: 24),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Emergency Control',
-                          style: AppTypography.headingM.copyWith(
-                            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(
+                                isDark
+                                    ? AppAssets.darkIconEmergencyIcon
+                                    : AppAssets.lightIconEmergencyIcon,
+                                width: 22,
+                                height: 22,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Emergency Control',
+                                style: AppTypography.headingM.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkPrimaryText
+                                      : AppColors.lightPrimaryText,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         Text(

@@ -5,13 +5,13 @@
 //?   circle icons on left and right sides.
 //? Hover state: brighter red (AppColors.errorSolid) bg.
 //? The button has Amazigh zigzag strip pattern on left and right
-//?   edges — defer pattern rendering to Antigravity.
 //? On confirm: sets hasEmergencyAlertProvider to true locally.
 // TODO :: Wire confirmed stop to local MQTT publish if needed
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -30,38 +30,107 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
 
   @override
   Widget build(BuildContext context) {
-    //* MouseRegion + InkWell dual input
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: InkWell(
-        onTap: () => _showConfirmDialog(context),
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: double.infinity,
-          height: 72,
-          decoration: BoxDecoration(
-            //* Default bg: Color(0xFFB71C1C), Hover bg: AppColors.errorSolid
-            color: _isHovered ? AppColors.errorSolid : const Color(0xFFB71C1C),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          //* Inner Row
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(PhosphorIcons.prohibit(), size: 28, color: Colors.white),
-              const SizedBox(width: 16),
-              Text(
-                'E M E R G E N C Y  S T O P',
-                style: AppTypography.headingM.copyWith(
-                  color: Colors.white,
-                  letterSpacing: 4.0,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: InkWell(
+          onTap: () => _showConfirmDialog(context),
+          child: SizedBox(
+            width: double.infinity,
+            height: 64,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                //* Background color
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  color: _isHovered
+                      ? AppColors.errorSolid.withValues(alpha: 0.82)
+                      : AppColors.errorSolid,
                 ),
-              ),
-              const SizedBox(width: 16),
-              Icon(PhosphorIcons.prohibit(), size: 28, color: Colors.white),
-            ],
+                //* Left pattern 
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 24,
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: ClipRect(
+                      child: RotatedBox(
+                        quarterTurns: 1,
+                        child: SvgPicture.asset(
+                          AppAssets.patternDotsLine,
+                          fit: BoxFit.cover,
+                          colorFilter:
+                              const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                //* Right pattern 
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 24,
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: ClipRect(
+                      child: RotatedBox(
+                        quarterTurns: 1,
+                        child: Transform.flip(
+                          flipX: true,
+                          child: SvgPicture.asset(
+                            AppAssets.patternDotsLine,
+                            fit: BoxFit.cover,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.white,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                //* Center row always on top
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        AppAssets.darkIconEmergencyButton,
+                        width: 28,
+                        height: 28,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'EMERGENCY STOP',
+                        style: AppTypography.overlineS.copyWith(
+                          color: AppColors.lightSurfaceCard,
+                          letterSpacing: 2.5,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      SvgPicture.asset(
+                        AppAssets.darkIconEmergencyButton,
+                        width: 28,
+                        height: 28,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -76,7 +145,7 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
         title: const Text('Confirm Emergency Stop'),
         content: const Text('This will halt all irrigation immediately. Are you sure?'),
         actions: [
-          //* Actions: Cancel (outlined) | Confirm (red filled)
+          //* Actions: Cancel (outlined) , Confirm (red filled)
           OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('CANCEL'),
@@ -87,11 +156,12 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
               AppLogger.critical('EMERGENCY', 'Emergency stop triggered by user');
               // TODO :: Publish stop signal to MQTT topic: tazrout/emergency/stop
               // TODO :: Set hasEmergencyAlertProvider to true locally
+              // TODO :: Wire emergency stop to MQTT when backend endpoint is live
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorSolid,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.lightSurfaceCard,
             ),
             child: const Text('CONFIRM STOP'),
           ),
