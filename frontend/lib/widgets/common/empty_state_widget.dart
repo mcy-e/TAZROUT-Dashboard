@@ -4,12 +4,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/locale_text_direction.dart';
 
 //& EmptyStateWidget
 class EmptyStateWidget extends StatelessWidget {
   final String message;
 
-  const EmptyStateWidget({super.key, this.message = 'No data available'});
+  const EmptyStateWidget({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,7 @@ class EmptyStateWidget extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             message,
+            textDirection: textDirectionForUiLocale(context),
             style: AppTypography.bodySRegular.copyWith(
               color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
             ),
@@ -40,4 +42,3 @@ class EmptyStateWidget extends StatelessWidget {
     );
   }
 }
-

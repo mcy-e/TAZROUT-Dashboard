@@ -6,8 +6,11 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& WaterUsageCard Widget
 class WaterUsageCard extends StatefulWidget {
@@ -26,17 +29,33 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
     'Month': [480, 620, 550, 410, 700],
   };
 
-  static const Map<String, List<String>> _periodLabels = {
-    'Day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    'Week': ['W1', 'W2', 'W3', 'W4', 'W5'],
-    'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-  };
+  List<String> _labelsForPeriod(BuildContext context, String period) {
+    final locale = Localizations.localeOf(context).toString();
+    final l10n = AppLocalizations.of(context)!;
+    switch (period) {
+      case 'Day':
+        return List.generate(
+          5,
+          (i) => DateFormat.E(locale).format(DateTime(2024, 1, 1 + i)),
+        );
+      case 'Week':
+        return List.generate(5, (i) => l10n.chartWeekLabel(i + 1));
+      case 'Month':
+        return List.generate(
+          5,
+          (i) => DateFormat.MMM(locale).format(DateTime(2024, i + 1, 1)),
+        );
+      default:
+        return [];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     final data = _periodData[_selectedPeriod]!;
-    final labels = _periodLabels[_selectedPeriod]!;
+    final labels = _labelsForPeriod(context, _selectedPeriod);
     final maxY = data.reduce((a, b) => a > b ? a : b) * 1.2;
 
     return Card(
@@ -57,7 +76,8 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
             Row(
               children: [
                 Text(
-                  'WATER USAGE (LITERS)',
+                  l10n.waterUsageTitle,
+                  textDirection: textDirectionForUiLocale(context),
                   style: AppTypography.overlineS.copyWith(
                     color: isDark ? AppColors.darkSubtleText : AppColors.lightMutedText,
                   ),
@@ -65,6 +85,7 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
                 const Spacer(),
                 _PeriodToggle(
                   selectedPeriod: _selectedPeriod,
+                  l10n: l10n,
                   onPeriodChanged: (period) => setState(() => _selectedPeriod = period),
                 ),
               ],
@@ -83,7 +104,7 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
                       tooltipRoundedRadius: 4,
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
-                          '${rod.toY.round()} L',
+                          l10n.waterUsageTooltipLiters(rod.toY.round().toString()),
                           AppTypography.captionMedium.copyWith(
                             color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                           ),
@@ -103,6 +124,7 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
                                 labels[index],
+                                textDirection: textDirectionForUiLocale(context),
                                 style: AppTypography.overlineXS.copyWith(
                                   color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                                 ),
@@ -158,12 +180,23 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
 //& _PeriodToggle Widget
 class _PeriodToggle extends StatelessWidget {
   final String selectedPeriod;
+  final AppLocalizations l10n;
   final ValueChanged<String> onPeriodChanged;
 
   const _PeriodToggle({
     required this.selectedPeriod,
+    required this.l10n,
     required this.onPeriodChanged,
   });
+
+  String _labelForPeriod(String period) {
+    return switch (period) {
+      'Day' => l10n.chartPeriodDay,
+      'Week' => l10n.chartPeriodWeek,
+      'Month' => l10n.chartPeriodMonth,
+      _ => period,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +235,8 @@ class _PeriodToggle extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              period,
+              _labelForPeriod(period),
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.captionMedium.copyWith(
                 color: isSelected
                     ? (isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText)

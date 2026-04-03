@@ -9,10 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../models/notification_model.dart';
 import '../../../providers/notification_provider.dart';
 
@@ -24,6 +26,7 @@ class SystemControlsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -37,59 +40,96 @@ class SystemControlsCard extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: isArabic(context)
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             //* Header Row with Title and Test Trigger
             Row(
-              children: [
-                Text(
-                  'System Controls',
-                  style: AppTypography.headingXS.copyWith(
-                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                  ),
-                ),
-                const Spacer(),
-                //* Test notification trigger — remove after MQTT is wired
-                //* Accessible via a small debug IconButton in the card header
-                // TODO :: Remove test trigger when MQTT events are live
-                IconButton(
-                  icon: Icon(
-                    PhosphorIcons.bellRinging(),
-                    size: 16,
-                    color: AppColors.darkMutedText,
-                  ),
-                  tooltip: 'Test notification',
-                  onPressed: () {
-                    ref.read(notificationProvider.notifier).add(
-                          NotificationModel(
-                            id: DateTime.now().millisecondsSinceEpoch.toString(),
-                            type: NotificationType.sensorAlert,
-                            title: 'Zone C Offline',
-                            message: 'Device lost connection. Check gateway.',
-                            timestamp: DateTime.now(),
-                          ),
-                        );
-                  },
-                ),
-              ],
+              children: isArabic(context)
+                  ? [
+                      IconButton(
+                        icon: Icon(
+                          PhosphorIcons.bellRinging(),
+                          size: 16,
+                          color: AppColors.darkMutedText,
+                        ),
+                        tooltip: l10n.tooltipTestNotification,
+                        onPressed: () {
+                          ref.read(notificationProvider.notifier).add(
+                                NotificationModel(
+                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  type: NotificationType.sensorAlert,
+                                  // DATA — no l10n, comes from MQTT/API
+                                  title: l10n.testNotificationTitle,
+                                  message: l10n.testNotificationMessage,
+                                  timestamp: DateTime.now(),
+                                ),
+                              );
+                        },
+                      ),
+                      const Spacer(),
+                      Text(
+                        l10n.systemControls,
+                        textAlign: TextAlign.right,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingXS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                    ]
+                  : [
+                      Text(
+                        l10n.systemControls,
+                        textAlign: TextAlign.left,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingXS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                      const Spacer(),
+                      //* Test notification trigger — remove after MQTT is wired
+                      //* Accessible via a small debug IconButton in the card header
+                      // TODO :: Remove test trigger when MQTT events are live
+                      IconButton(
+                        icon: Icon(
+                          PhosphorIcons.bellRinging(),
+                          size: 16,
+                          color: AppColors.darkMutedText,
+                        ),
+                        tooltip: l10n.tooltipTestNotification,
+                        onPressed: () {
+                          ref.read(notificationProvider.notifier).add(
+                                NotificationModel(
+                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  type: NotificationType.sensorAlert,
+                                  // DATA — no l10n, comes from MQTT/API
+                                  title: l10n.testNotificationTitle,
+                                  message: l10n.testNotificationMessage,
+                                  timestamp: DateTime.now(),
+                                ),
+                              );
+                        },
+                      ),
+                    ],
             ),
             const SizedBox(height: 16),
             //* Two full-width outlined buttons stacked vertically with 12px gap
             //* REBOOT button
             _AnimatedRebootButton(
-              onConfirmRequested: () => _showConfirmDialog(context, 'REBOOT'),
+              onConfirmRequested: () => _showConfirmDialog(context, _SystemAction.reboot),
             ),
             const SizedBox(height: 12),
             //* SHUT DOWN button
             _ControlButton(
               // TODO :: Wire to MQTT topic: tazrout/system/control
-              label: 'SHUT DOWN',
+              label: l10n.shutdown,
               darkIcon: AppAssets.darkIconShutDownI,
               lightIcon: AppAssets.lightIconShutDownI,
               hoverDarkIcon: AppAssets.darkIconShutDownH,
               hoverLightIcon: AppAssets.lightIconShutDownH,
               hoverColor: AppColors.errorSolid,
-              onPressed: () => _showConfirmDialog(context, 'SHUT DOWN'),
+              onPressed: () => _showConfirmDialog(context, _SystemAction.shutdown),
             ),
           ],
         ),
@@ -98,12 +138,20 @@ class SystemControlsCard extends ConsumerWidget {
   }
 
   //* On tap: show confirmation AlertDialog before logging the action
-  Future<bool> _showConfirmDialog(BuildContext context, String action) async {
+  Future<bool> _showConfirmDialog(BuildContext context, _SystemAction action) async {
+    final l10n = AppLocalizations.of(context)!;
+    final body = action == _SystemAction.reboot ? l10n.confirmRebootBody : l10n.confirmShutdownBody;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Confirm $action'),
-        content: Text('Are you sure you want to $action the system?'),
+        title: Text(
+          l10n.confirmActionTitle,
+          textDirection: textDirectionForUiLocale(context),
+        ),
+        content: Text(
+          body,
+          textDirection: textDirectionForUiLocale(context),
+        ),
         actions: [
           //* Minimum 48px tap target for touch screen compatibility
           TextButton(
@@ -111,19 +159,26 @@ class SystemControlsCard extends ConsumerWidget {
             style: TextButton.styleFrom(
               minimumSize: const Size(48, 48),
             ),
-            child: const Text('CANCEL'),
+            child: Text(
+              l10n.cancel,
+              textDirection: textDirectionForUiLocale(context),
+            ),
           ),
           //* Minimum 48px tap target for touch screen compatibility
           TextButton(
             onPressed: () {
               //* Log the action
-              AppLogger.info('SYSTEM', 'User triggered $action');
+              final actionLabel = action == _SystemAction.reboot ? l10n.reboot : l10n.shutdown;
+              AppLogger.info('SYSTEM', 'User triggered $actionLabel');
               Navigator.pop(context, true);
             },
             style: TextButton.styleFrom(
               minimumSize: const Size(48, 48),
             ),
-            child: const Text('CONFIRM'),
+            child: Text(
+              l10n.confirm,
+              textDirection: textDirectionForUiLocale(context),
+            ),
           ),
         ],
       ),
@@ -131,6 +186,9 @@ class SystemControlsCard extends ConsumerWidget {
     return result ?? false;
   }
 }
+
+//& _SystemAction
+enum _SystemAction { reboot, shutdown }
 
 class _AnimatedRebootButton extends StatefulWidget {
   final Future<bool> Function() onConfirmRequested;
@@ -172,11 +230,11 @@ class _AnimatedRebootButtonState extends State<_AnimatedRebootButton> with Singl
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     final Color borderColor = _isHovered
         ? AppColors.primary
         : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider);
-    
+
     final Color contentColor = _isHovered
         ? AppColors.primary
         : (isDark ? AppColors.darkBodyText : AppColors.lightBodyText);
@@ -197,41 +255,81 @@ class _AnimatedRebootButtonState extends State<_AnimatedRebootButton> with Singl
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              //* Spinning reboot icon using RotationTransition
-              RotationTransition(
-                turns: _spinController,
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: AnimatedCrossFade(
-                    duration: const Duration(milliseconds: 150),
-                    firstCurve: Curves.easeInOut,
-                    secondCurve: Curves.easeInOut,
-                    crossFadeState: _isHovered
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                    firstChild: SvgPicture.asset(
-                      isDark ? AppAssets.darkIconRebootI : AppAssets.lightIconRebootI,
-                      height: 18,
-                      colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+            children: isArabic(context)
+                ? [
+                    Text(
+                      AppLocalizations.of(context)!.reboot,
+                      textAlign: TextAlign.right,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.bodySMedium.copyWith(
+                        color: contentColor,
+                      ),
                     ),
-                    secondChild: SvgPicture.asset(
-                      isDark ? AppAssets.darkIconRebootH : AppAssets.lightIconRebootH,
-                      height: 18,
-                      colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                    const SizedBox(width: 8),
+                    //* Spinning reboot icon using RotationTransition
+                    RotationTransition(
+                      turns: _spinController,
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: AnimatedCrossFade(
+                          duration: const Duration(milliseconds: 150),
+                          firstCurve: Curves.easeInOut,
+                          secondCurve: Curves.easeInOut,
+                          crossFadeState: _isHovered
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
+                          firstChild: SvgPicture.asset(
+                            isDark ? AppAssets.darkIconRebootI : AppAssets.lightIconRebootI,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                          ),
+                          secondChild: SvgPicture.asset(
+                            isDark ? AppAssets.darkIconRebootH : AppAssets.lightIconRebootH,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'REBOOT',
-                style: AppTypography.bodySMedium.copyWith(
-                  color: contentColor,
-                ),
-              ),
-            ],
+                  ]
+                : [
+                    //* Spinning reboot icon using RotationTransition
+                    RotationTransition(
+                      turns: _spinController,
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: AnimatedCrossFade(
+                          duration: const Duration(milliseconds: 150),
+                          firstCurve: Curves.easeInOut,
+                          secondCurve: Curves.easeInOut,
+                          crossFadeState: _isHovered
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
+                          firstChild: SvgPicture.asset(
+                            isDark ? AppAssets.darkIconRebootI : AppAssets.lightIconRebootI,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                          ),
+                          secondChild: SvgPicture.asset(
+                            isDark ? AppAssets.darkIconRebootH : AppAssets.lightIconRebootH,
+                            height: 18,
+                            colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppLocalizations.of(context)!.reboot,
+                      textAlign: TextAlign.left,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.bodySMedium.copyWith(
+                        color: contentColor,
+                      ),
+                    ),
+                  ],
           ),
         ),
       ),
@@ -268,12 +366,12 @@ class _ControlButtonState extends State<_ControlButton> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     //* Visual state driven by _isHovered OR press state
     final Color borderColor = _isHovered
         ? widget.hoverColor
         : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider);
-    
+
     final Color contentColor = _isHovered
         ? widget.hoverColor
         : (isDark ? AppColors.darkBodyText : AppColors.lightBodyText);
@@ -295,37 +393,73 @@ class _ControlButtonState extends State<_ControlButton> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: AnimatedCrossFade(
-                  duration: const Duration(milliseconds: 150),
-                  firstCurve: Curves.easeInOut,
-                  secondCurve: Curves.easeInOut,
-                  crossFadeState: _isHovered
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  firstChild: SvgPicture.asset(
-                    isDark ? widget.darkIcon : widget.lightIcon,
-                    height: 18,
-                    colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
-                  ),
-                  secondChild: SvgPicture.asset(
-                    isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
-                    height: 18,
-                    colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                widget.label.toUpperCase(),
-                style: AppTypography.bodySMedium.copyWith(
-                  color: contentColor,
-                ),
-              ),
-            ],
+            children: isArabic(context)
+                ? [
+                    Text(
+                      widget.label.toUpperCase(),
+                      textAlign: TextAlign.right,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.bodySMedium.copyWith(
+                        color: contentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: AnimatedCrossFade(
+                        duration: const Duration(milliseconds: 150),
+                        firstCurve: Curves.easeInOut,
+                        secondCurve: Curves.easeInOut,
+                        crossFadeState: _isHovered
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
+                        firstChild: SvgPicture.asset(
+                          isDark ? widget.darkIcon : widget.lightIcon,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                        ),
+                        secondChild: SvgPicture.asset(
+                          isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                  ]
+                : [
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: AnimatedCrossFade(
+                        duration: const Duration(milliseconds: 150),
+                        firstCurve: Curves.easeInOut,
+                        secondCurve: Curves.easeInOut,
+                        crossFadeState: _isHovered
+                            ? CrossFadeState.showSecond
+                            : CrossFadeState.showFirst,
+                        firstChild: SvgPicture.asset(
+                          isDark ? widget.darkIcon : widget.lightIcon,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                        ),
+                        secondChild: SvgPicture.asset(
+                          isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(contentColor, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.label.toUpperCase(),
+                      textAlign: TextAlign.left,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.bodySMedium.copyWith(
+                        color: contentColor,
+                      ),
+                    ),
+                  ],
           ),
         ),
       ),

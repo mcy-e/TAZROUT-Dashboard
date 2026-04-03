@@ -6,8 +6,10 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 
 //& EnvStatsCard Widget
 class EnvStatsCard extends StatelessWidget {
@@ -17,6 +19,7 @@ class EnvStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -30,43 +33,94 @@ class EnvStatsCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: isArabic(context)
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             //* Header Row: Title + Legend
             Row(
-              children: [
-                Text(
-                  'ENV STATS',
-                  style: AppTypography.overlineS.copyWith(
-                    color: isDark ? AppColors.darkSubtleText : AppColors.lightMutedText,
-                  ),
-                ),
-                const Spacer(),
-                //* Legend
-                Row(
-                  children: [
-                    _buildLegendDot(AppColors.errorSolid),
-                    const SizedBox(width: 4),
-                    Text('Temp', style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10)),
-                    const SizedBox(width: 8),
-                    _buildLegendDot(AppColors.series2Blue),
-                    const SizedBox(width: 4),
-                    Text('Hum', style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10)),
-                  ],
-                ),
-              ],
+              children: isArabic(context)
+                  ? [
+                      Row(
+                        children: [
+                          Text(
+                            l10n.envLegendHumShort,
+                            textAlign: TextAlign.right,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildLegendDot(AppColors.series2Blue),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.envLegendTempShort,
+                            textAlign: TextAlign.right,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildLegendDot(AppColors.errorSolid),
+                        ],
+                      ),
+                      const Spacer(),
+                      Text(
+                        l10n.envStatsTitle,
+                        textAlign: TextAlign.right,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.overlineS.copyWith(
+                          color: isDark ? AppColors.darkSubtleText : AppColors.lightMutedText,
+                        ),
+                      ),
+                    ]
+                  : [
+                      Text(
+                        l10n.envStatsTitle,
+                        textAlign: TextAlign.left,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.overlineS.copyWith(
+                          color: isDark ? AppColors.darkSubtleText : AppColors.lightMutedText,
+                        ),
+                      ),
+                      const Spacer(),
+                      //* Legend
+                      Row(
+                        children: [
+                          _buildLegendDot(AppColors.errorSolid),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.envLegendTempShort,
+                            textAlign: TextAlign.left,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildLegendDot(AppColors.series2Blue),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.envLegendHumShort,
+                            textAlign: TextAlign.left,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.captionMedium.copyWith(color: AppColors.darkMutedText, fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ],
             ),
             const SizedBox(height: 8),
-            //* Large KPI number
+            //* Large KPI number — DATA from MQTT
             Text(
               '24°C',
+              textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.displayL.copyWith(
                 color: AppColors.primary,
                 fontSize: 32,
               ),
             ),
             Text(
-              'AVG TEMP',
+              l10n.envAvgTempLabel,
+              textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.overlineXS.copyWith(
                 color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
               ),

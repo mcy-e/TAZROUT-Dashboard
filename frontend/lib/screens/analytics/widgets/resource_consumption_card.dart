@@ -6,8 +6,10 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 
 //& ResourceConsumptionCard Widget
 class ResourceConsumptionCard extends StatefulWidget {
@@ -42,6 +44,7 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     final zoneData = _periodData[_selectedPeriod]!;
     final maxY = zoneData
             .map((zone) => zone[0] + zone[1] + zone[2])
@@ -60,30 +63,59 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: isArabic(context)
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             //* Header Row: Title + Period Toggle
             Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    'Resource Consumption by Zone',
-                    style: AppTypography.headingXS.copyWith(
-                      color: isDark
-                          ? AppColors.darkPrimaryText
-                          : AppColors.lightPrimaryText,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _PeriodToggle(
-                  selectedPeriod: _selectedPeriod,
-                  onPeriodChanged: (period) =>
-                      setState(() => _selectedPeriod = period),
-                ),
-              ],
+              children: isArabic(context)
+                  ? [
+                      _PeriodToggle(
+                        selectedPeriod: _selectedPeriod,
+                        l10n: l10n,
+                        onPeriodChanged: (period) =>
+                            setState(() => _selectedPeriod = period),
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          l10n.resourceConsumptionTitle,
+                          textAlign: TextAlign.right,
+                          textDirection: textDirectionForUiLocale(context),
+                          style: AppTypography.headingXS.copyWith(
+                            color: isDark
+                                ? AppColors.darkPrimaryText
+                                : AppColors.lightPrimaryText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ]
+                  : [
+                      Flexible(
+                        child: Text(
+                          l10n.resourceConsumptionTitle,
+                          textAlign: TextAlign.left,
+                          textDirection: textDirectionForUiLocale(context),
+                          style: AppTypography.headingXS.copyWith(
+                            color: isDark
+                                ? AppColors.darkPrimaryText
+                                : AppColors.lightPrimaryText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _PeriodToggle(
+                        selectedPeriod: _selectedPeriod,
+                        l10n: l10n,
+                        onPeriodChanged: (period) =>
+                            setState(() => _selectedPeriod = period),
+                      ),
+                    ],
             ),
             const SizedBox(height: 16),
             //* Stacked Bar Chart
@@ -99,6 +131,7 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
+                          // DATA — zone names from MQTT
                           const zones = ['Zone A', 'Zone B', 'Zone C'];
                           final index = value.toInt();
                           if (index >= 0 && index < zones.length) {
@@ -106,6 +139,7 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
                                 zones[index],
+                                textDirection: textDirectionForUiLocale(context),
                                 style: AppTypography.overlineXS.copyWith(
                                   color: isDark
                                       ? AppColors.darkMutedText
@@ -147,11 +181,11 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildLegendItem(AppColors.series2Blue, 'WATER'),
+                _buildLegendItem(context, AppColors.series2Blue, l10n.legendWaterShort),
                 const SizedBox(width: 16),
-                _buildLegendItem(AppColors.primary, 'MOISTURE'),
+                _buildLegendItem(context, AppColors.primary, l10n.legendMoistureShort),
                 const SizedBox(width: 16),
-                _buildLegendItem(AppColors.errorSolid, 'TEMP'),
+                _buildLegendItem(context, AppColors.errorSolid, l10n.legendTempShort),
               ],
             ),
           ],
@@ -178,31 +212,54 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
+  Widget _buildLegendItem(BuildContext context, Color color, String label) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: AppTypography.overlineXS.copyWith(
-              color:
-                  isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
-            ),
-          ),
-        ),
-      ],
+      children: isArabic(context)
+          ? [
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.right,
+                  textDirection: textDirectionForUiLocale(context),
+                  style: AppTypography.overlineXS.copyWith(
+                    color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ]
+          : [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.left,
+                  textDirection: textDirectionForUiLocale(context),
+                  style: AppTypography.overlineXS.copyWith(
+                    color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                  ),
+                ),
+              ),
+            ],
     );
   }
 }
@@ -210,10 +267,12 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
 //& _PeriodToggle Widget
 class _PeriodToggle extends StatefulWidget {
   final String selectedPeriod;
+  final AppLocalizations l10n;
   final ValueChanged<String> onPeriodChanged;
 
   const _PeriodToggle({
     required this.selectedPeriod,
+    required this.l10n,
     required this.onPeriodChanged,
   });
 
@@ -222,22 +281,32 @@ class _PeriodToggle extends StatefulWidget {
 }
 
 class _PeriodToggleState extends State<_PeriodToggle> {
+  String _labelForPeriod(String period) {
+    final l = widget.l10n;
+    return switch (period) {
+      'Day' => l.chartPeriodDay,
+      'Week' => l.chartPeriodWeek,
+      'Month' => l.chartPeriodMonth,
+      _ => period,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildToggleButton(isDark, 'Day'),
+        _buildToggleButton(context, isDark, 'Day'),
         const SizedBox(width: 4),
-        _buildToggleButton(isDark, 'Week'),
+        _buildToggleButton(context, isDark, 'Week'),
         const SizedBox(width: 4),
-        _buildToggleButton(isDark, 'Month'),
+        _buildToggleButton(context, isDark, 'Month'),
       ],
     );
   }
 
-  Widget _buildToggleButton(bool isDark, String period) {
+  Widget _buildToggleButton(BuildContext context, bool isDark, String period) {
     final isSelected = widget.selectedPeriod == period;
 
     return MouseRegion(
@@ -258,7 +327,8 @@ class _PeriodToggleState extends State<_PeriodToggle> {
           ),
           child: Center(
             child: Text(
-              period,
+              _labelForPeriod(period),
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.captionMedium.copyWith(
                 color: isSelected
                     ? (isDark

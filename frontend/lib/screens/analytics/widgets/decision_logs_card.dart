@@ -5,8 +5,10 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 import '../../../../widgets/common/empty_state_widget.dart';
 
 //& DecisionLogsCard Widget
@@ -19,13 +21,15 @@ class DecisionLogsCard extends StatefulWidget {
 }
 
 class _DecisionLogsCardState extends State<DecisionLogsCard> {
-  String _selectedFilter = 'All';
+  //* Internal filter keys (stable English) — labels come from l10n
+  String _selectedFilterKey = 'all';
 
   static const List<Map<String, String>> _allLogs = [
     {
       'id': 'DEC-2024-001',
       'date': 'Oct 15, 2024',
       'type': 'IRRIGATION',
+      // DATA — no l10n, comes from MQTT/API
       'details': 'Watered Zones A, B (20 mins)',
     },
     {
@@ -55,14 +59,13 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
   ];
 
   List<Map<String, String>> get _filteredLogs {
-    if (_selectedFilter == 'All') return _allLogs;
-    //* Map button label to type value
+    if (_selectedFilterKey == 'all') return _allLogs;
     final map = {
-      'Irrigation': 'IRRIGATION',
-      'Alerts': 'ALERT',
-      'Advice': 'ADVICE',
+      'irrigation': 'IRRIGATION',
+      'alerts': 'ALERT',
+      'advice': 'ADVICE',
     };
-    final target = map[_selectedFilter];
+    final target = map[_selectedFilterKey];
     if (target == null) return _allLogs;
     return _allLogs.where((log) => log['type'] == target).toList();
   }
@@ -70,6 +73,7 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -89,15 +93,16 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
             Row(
               children: [
                 Text(
-                  'Decision Logs',
+                  l10n.decisionLogsTitle,
+                  textDirection: textDirectionForUiLocale(context),
                   style: AppTypography.headingXS.copyWith(
                     color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                   ),
                 ),
                 const Spacer(),
                 _FilterTabs(
-                  selectedFilter: _selectedFilter,
-                  onFilterChanged: (filter) => setState(() => _selectedFilter = filter),
+                  selectedFilterKey: _selectedFilterKey,
+                  onFilterChanged: (key) => setState(() => _selectedFilterKey = key),
                 ),
               ],
             ),
@@ -109,19 +114,35 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: Text('ID', style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText)),
+                    child: Text(
+                      l10n.columnId,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText),
+                    ),
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text('DATE', style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText)),
+                    child: Text(
+                      l10n.columnDate,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText),
+                    ),
                   ),
                   Expanded(
                     flex: 2,
-                    child: Text('TYPE', style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText)),
+                    child: Text(
+                      l10n.columnType,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText),
+                    ),
                   ),
                   Expanded(
                     flex: 3,
-                    child: Text('DETAILS', style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText)),
+                    child: Text(
+                      l10n.columnDetails,
+                      textDirection: textDirectionForUiLocale(context),
+                      style: AppTypography.overlineXS.copyWith(color: AppColors.darkMutedText),
+                    ),
                   ),
                 ],
               ),
@@ -130,7 +151,7 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
             //* Scrollable Table Body
             Expanded(
               child: _filteredLogs.isEmpty
-                  ? const EmptyStateWidget()
+                  ? EmptyStateWidget(message: l10n.emptyStateNoData)
                   : ListView.builder(
                       itemCount: _filteredLogs.length,
                       itemBuilder: (context, index) {
@@ -147,29 +168,41 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
 
 //& _FilterTabs Widget
 class _FilterTabs extends StatelessWidget {
-  final String selectedFilter;
+  final String selectedFilterKey;
   final ValueChanged<String> onFilterChanged;
 
   const _FilterTabs({
-    required this.selectedFilter,
+    required this.selectedFilterKey,
     required this.onFilterChanged,
   });
 
+  static const List<String> _keys = ['all', 'irrigation', 'alerts', 'advice'];
+
+  String _labelForKey(String key, AppLocalizations l10n) {
+    return switch (key) {
+      'all' => l10n.filterAll,
+      'irrigation' => l10n.filterIrrigation,
+      'alerts' => l10n.filterAlerts,
+      'advice' => l10n.filterAdvice,
+      _ => key,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filters = ['All', 'Irrigation', 'Alerts', 'Advice'];
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: filters.map((filter) {
-        final isSelected = selectedFilter == filter;
+      children: _keys.map((key) {
+        final isSelected = selectedFilterKey == key;
         return Padding(
           padding: const EdgeInsets.only(left: 4),
           child: MouseRegion(
             cursor: SystemMouseCursors.click,
             child: InkWell(
-              onTap: () => onFilterChanged(filter),
+              onTap: () => onFilterChanged(key),
               borderRadius: BorderRadius.circular(20),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
@@ -183,7 +216,8 @@ class _FilterTabs extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    filter,
+                    _labelForKey(key, l10n),
+                    textDirection: textDirectionForUiLocale(context),
                     style: AppTypography.captionMedium.copyWith(
                       color: isSelected
                           ? (isDark
@@ -259,6 +293,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
               flex: 2,
               child: Text(
                 id,
+                textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.captionMedium.copyWith(
                   color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                 ),
@@ -269,12 +304,13 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
               flex: 2,
               child: Text(
                 date,
+                textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.captionMedium.copyWith(
                   color: AppColors.darkMutedText,
                 ),
               ),
             ),
-            //* flex 2: DecisionTypeBadge
+            //* flex 2: DecisionTypeBadge — DATA type string from MQTT
             Expanded(
               flex: 2,
               child: UnconstrainedBox(
@@ -287,6 +323,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
                   ),
                   child: Text(
                     type,
+                    textDirection: textDirectionForUiLocale(context),
                     style: AppTypography.overlineXS.copyWith(
                       color: typeColor,
                       fontWeight: FontWeight.bold,
@@ -295,11 +332,12 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
                 ),
               ),
             ),
-            //* flex 3: Details
+            //* flex 3: Details — DATA
             Expanded(
               flex: 3,
               child: Text(
                 details,
+                textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.captionMedium.copyWith(
                   color: isDark ? AppColors.darkBodyText : AppColors.lightBodyText,
                 ),

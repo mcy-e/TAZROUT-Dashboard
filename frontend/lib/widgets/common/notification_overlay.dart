@@ -5,17 +5,35 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/utils/notification_sound.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/preferences_provider.dart';
 import 'notification_toast.dart';
 
 //& NotificationOverlay Widget
-class NotificationOverlay extends ConsumerWidget {
-  //* ConsumerWidget — watches notificationProvider
+class NotificationOverlay extends ConsumerStatefulWidget {
+  //* ConsumerStatefulWidget — watches notificationProvider + plays sound
   const NotificationOverlay({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationOverlay> createState() => _NotificationOverlayState();
+}
+
+class _NotificationOverlayState extends ConsumerState<NotificationOverlay> {
+  int _lastCount = 0;
+
+  Future<void> _playNotificationSound() async {
+    playNotificationSoundIfEnabled(ref.read(preferencesProvider).soundAlerts);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notifications = ref.watch(notificationProvider);
+
+    if (notifications.length > _lastCount) {
+      _playNotificationSound();
+    }
+    _lastCount = notifications.length;
 
     //* Positioned top-right: top 24px, right 24px
     return Positioned(
@@ -30,7 +48,9 @@ class NotificationOverlay extends ConsumerWidget {
             NotificationToast(
               key: ValueKey(n.id),
               notification: n,
-              onDismiss: () => ref.read(notificationProvider.notifier).remove(n.id),
+              onDismiss: () {
+                ref.read(notificationProvider.notifier).remove(n.id);
+              },
             ),
         ],
       ),

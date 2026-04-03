@@ -9,9 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/constants/app_assets.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 
 //& PerformanceMonitorCard
 class PerformanceMonitorCard extends StatelessWidget {
@@ -21,6 +23,7 @@ class PerformanceMonitorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -37,32 +40,62 @@ class PerformanceMonitorCard extends StatelessWidget {
           children: [
             //* Header Row
             Row(
-              children: [
-                //* Icon: green pulse/activity icon
-                SvgPicture.asset(
-                  isDark ? AppAssets.darkIconPerformance : AppAssets.lightIconPerformance,
-                  height: 18,
-                ),
-                const SizedBox(width: 8),
-                //* Title
-                Text(
-                  'Performance Monitor',
-                  style: AppTypography.headingXS.copyWith(
-                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                  ),
-                ),
-                const Spacer(),
-                //* Three dot indicators
-                Row(
-                  children: [
-                    _buildDot(AppColors.darkStrokeDivider),
-                    const SizedBox(width: 4),
-                    _buildDot(AppColors.darkStrokeDivider),
-                    const SizedBox(width: 4),
-                    _buildDot(AppColors.primary),
-                  ],
-                ),
-              ],
+              children: isArabic(context)
+                  ? [
+                      Row(
+                        children: [
+                          _buildDot(AppColors.primary),
+                          const SizedBox(width: 4),
+                          _buildDot(AppColors.darkStrokeDivider),
+                          const SizedBox(width: 4),
+                          _buildDot(AppColors.darkStrokeDivider),
+                        ],
+                      ),
+                      const Spacer(),
+                      //* Title
+                      Text(
+                        l10n.performanceMonitor,
+                        textAlign: TextAlign.right,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingXS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      //* Icon: green pulse/activity icon
+                      SvgPicture.asset(
+                        isDark ? AppAssets.darkIconPerformance : AppAssets.lightIconPerformance,
+                        height: 18,
+                      ),
+                    ]
+                  : [
+                      //* Icon: green pulse/activity icon
+                      SvgPicture.asset(
+                        isDark ? AppAssets.darkIconPerformance : AppAssets.lightIconPerformance,
+                        height: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      //* Title
+                      Text(
+                        l10n.performanceMonitor,
+                        textAlign: TextAlign.left,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingXS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                      const Spacer(),
+                      //* Three dot indicators
+                      Row(
+                        children: [
+                          _buildDot(AppColors.darkStrokeDivider),
+                          const SizedBox(width: 4),
+                          _buildDot(AppColors.darkStrokeDivider),
+                          const SizedBox(width: 4),
+                          _buildDot(AppColors.primary),
+                        ],
+                      ),
+                    ],
             ),
             const SizedBox(height: 16),
             //* Replace GridView.count with a Column of two Rows
@@ -77,7 +110,7 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: _MetricSubCard(
                             // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: 'WATER OUTPUT',
+                            label: l10n.waterOutput,
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '42%',
                             accentColor: AppColors.primary,
@@ -93,7 +126,7 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: _MetricSubCard(
                             // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: 'SOIL MOISTURE',
+                            label: l10n.soilMoisture,
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '620 g/kg',
                             accentColor: AppColors.series2Blue,
@@ -115,7 +148,7 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: _MetricSubCard(
                             // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: 'TEMPERATURE',
+                            label: l10n.temperature,
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '24°C',
                             accentColor: AppColors.errorSolid,
@@ -131,7 +164,7 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: _MetricSubCard(
                             // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: 'HUMIDITY',
+                            label: l10n.humidity,
                             // TODO :: Wire live values to MQTT SENSOR_UPDATE events
                             value: '45%',
                             accentColor: AppColors.series3Amber,
@@ -229,49 +262,95 @@ class _MetricSubCardState extends State<_MetricSubCard> {
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: isArabic(context)
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               //* Header: Label + Icon
               Row(
-                children: [
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 150),
-                    style: AppTypography.overlineXS.copyWith(
-                      color: _isHovered
-                        ? AppColors.primary
-                        : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
-                    ),
-                    child: Text(widget.label),
-                  ),
-                  const Spacer(),
-                  //* Smooth icon transition between idle and hover state
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 200),
-                      firstCurve: Curves.easeInOut,
-                      secondCurve: Curves.easeInOut,
-                      crossFadeState: _isHovered
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: SvgPicture.asset(
-                        isDark ? widget.darkIcon : widget.lightIcon,
-                        height: 18,
-                      ),
-                      secondChild: SvgPicture.asset(
-                        isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
-                        height: 18,
-                      ),
-                    ),
-                  ),
-                ],
+                children: isArabic(context)
+                    ? [
+                        //* Smooth icon transition between idle and hover state
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: AnimatedCrossFade(
+                            duration: const Duration(milliseconds: 200),
+                            firstCurve: Curves.easeInOut,
+                            secondCurve: Curves.easeInOut,
+                            crossFadeState: _isHovered
+                                ? CrossFadeState.showSecond
+                                : CrossFadeState.showFirst,
+                            firstChild: SvgPicture.asset(
+                              isDark ? widget.darkIcon : widget.lightIcon,
+                              height: 18,
+                            ),
+                            secondChild: SvgPicture.asset(
+                              isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                              height: 18,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 150),
+                          style: AppTypography.overlineXS.copyWith(
+                            color: _isHovered
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
+                          ),
+                          child: Text(
+                            widget.label,
+                            textAlign: TextAlign.right,
+                            textDirection: textDirectionForUiLocale(context),
+                          ),
+                        ),
+                      ]
+                    : [
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 150),
+                          style: AppTypography.overlineXS.copyWith(
+                            color: _isHovered
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkMutedText : AppColors.lightMutedText),
+                          ),
+                          child: Text(
+                            widget.label,
+                            textAlign: TextAlign.left,
+                            textDirection: textDirectionForUiLocale(context),
+                          ),
+                        ),
+                        const Spacer(),
+                        //* Smooth icon transition between idle and hover state
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: AnimatedCrossFade(
+                            duration: const Duration(milliseconds: 200),
+                            firstCurve: Curves.easeInOut,
+                            secondCurve: Curves.easeInOut,
+                            crossFadeState: _isHovered
+                                ? CrossFadeState.showSecond
+                                : CrossFadeState.showFirst,
+                            firstChild: SvgPicture.asset(
+                              isDark ? widget.darkIcon : widget.lightIcon,
+                              height: 18,
+                            ),
+                            secondChild: SvgPicture.asset(
+                              isDark ? widget.hoverDarkIcon : widget.hoverLightIcon,
+                              height: 18,
+                            ),
+                          ),
+                        ),
+                      ],
               ),
               const SizedBox(height: 4),
               //* Value
               Text(
                 widget.value,
+                textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+                textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.bodyMBold.copyWith(color: widget.accentColor),
               ),
               const SizedBox(height: 8),

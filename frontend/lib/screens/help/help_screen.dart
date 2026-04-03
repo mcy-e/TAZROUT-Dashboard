@@ -4,8 +4,10 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import '../../core/localization/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import 'widgets/faq_grid.dart';
 import 'widgets/support_banner.dart';
 import 'widgets/qr_contact_card.dart';
@@ -18,23 +20,30 @@ class HelpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: isArabic(context)
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             //* Page header
             Text(
-              'Help Center',
+              l10n.helpTitle,
+              textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.headingM.copyWith(
                 color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
               ),
             ),
             Text(
-              'Find answers and support for your dashboard.',
+              l10n.helpSubtitle,
+              textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.bodySRegular.copyWith(
                 color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
               ),

@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -188,15 +189,15 @@ class _ZoneCardState extends State<ZoneCard> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       foregroundColor: isOnline ? AppColors.primary : AppColors.errorSolid,
-                      overlayColor: Colors.transparent,
+                      overlayColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
                       backgroundColor: _showStatsHovered
                           ? (isOnline
                               ? AppColors.primary.withValues(alpha: 0.06)
                               : AppColors.errorSolid.withValues(alpha: 0.06))
-                          : Colors.transparent,
+                          : AppColors.lightSurfaceCard.withValues(alpha: 0.0),
                     ),
                     child: Text(
-                      'Show stats',
+                      AppLocalizations.of(context)!.showStats,
                       style: AppTypography.bodySMedium.copyWith(
                         color: isOnline ? AppColors.primary : AppColors.errorSolid,
                       ),
@@ -322,15 +323,15 @@ class _ZoneCardState extends State<ZoneCard> {
                 borderRadius: BorderRadius.circular(6),
               ),
               foregroundColor: isOnline ? AppColors.primary : AppColors.errorSolid,
-              overlayColor: Colors.transparent,
+              overlayColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
               backgroundColor: _hideStatsHovered
                   ? (isOnline
                       ? AppColors.primary.withValues(alpha: 0.06)
                       : AppColors.errorSolid.withValues(alpha: 0.06))
-                  : Colors.transparent,
+                  : AppColors.lightSurfaceCard.withValues(alpha: 0.0),
             ),
             child: Text(
-              'Hide stats',
+              AppLocalizations.of(context)!.hideStats,
               style: AppTypography.overlineS.copyWith(
                 color: isOnline ? AppColors.primary : AppColors.errorSolid,
               ),

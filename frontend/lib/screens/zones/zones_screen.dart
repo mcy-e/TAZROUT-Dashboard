@@ -4,7 +4,11 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import '../../../models/zone_model.dart';
+import '../../core/localization/l10n/app_localizations.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../models/zone_model.dart';
 import 'widgets/zone_card.dart';
 
 //& ZonesScreen Widget
@@ -14,6 +18,9 @@ class ZonesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+
     //* Build a static list of 7 ZoneModel objects with varied states
     // TODO :: Replace with real MQTT data from topic: tazrout/zones
     final List<ZoneModel> zones = [
@@ -84,24 +91,49 @@ class ZonesScreen extends StatelessWidget {
 
     //* Layout: Padding(24) → GridView.builder
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: LayoutBuilder(
         builder: (context, constraints) {
           //* subtract 24px padding on each side, then 2 gaps of 16px between 3 columns
           final availableWidth = constraints.maxWidth - 48;
           final cardWidth = (availableWidth - 32) / 3;
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: zones.map((zone) {
-                return SizedBox(
-                  width: cardWidth,
-                  child: ZoneCard(zone: zone),
-                );
-              }).toList(),
+            child: Column(
+              crossAxisAlignment: isArabic(context)
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.zonesTitle,
+                  textAlign: isArabic(context) ? TextAlign.right : TextAlign.start,
+                  textDirection: textDirectionForUiLocale(context),
+                  style: AppTypography.headingM.copyWith(
+                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.zonesSubtitle,
+                  textAlign: isArabic(context) ? TextAlign.right : TextAlign.start,
+                  textDirection: textDirectionForUiLocale(context),
+                  style: AppTypography.bodySRegular.copyWith(
+                    color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: zones.map((zone) {
+                    return SizedBox(
+                      width: cardWidth,
+                      child: ZoneCard(zone: zone),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           );
         },

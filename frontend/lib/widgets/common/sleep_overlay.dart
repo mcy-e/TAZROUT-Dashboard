@@ -25,10 +25,16 @@ class SleepOverlay extends ConsumerWidget {
     //* If sleeping: dark overlay with logo
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _wakeUp(ref),
-      onPanDown: (_) => _wakeUp(ref),
+      onTap: () {
+        _wakeUp(ref);
+      },
+      onPanDown: (_) {
+        _wakeUp(ref);
+      },
       child: MouseRegion(
-        onHover: (_) => _wakeUp(ref),
+        onHover: (_) {
+          _wakeUp(ref);
+        },
         child: TweenAnimationBuilder<double>(
           duration: const Duration(milliseconds: 800),
           tween: Tween<double>(begin: 0.0, end: 0.92),

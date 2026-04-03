@@ -4,7 +4,7 @@
 //? Default state: dark red bg (#B71C1C) with white text and two
 //?   circle icons on left and right sides.
 //? Hover state: brighter red (AppColors.errorSolid) bg.
-//? The button has Amazigh zigzag strip pattern on left and right
+//? The button has Amazigh zigzag strip pattern on left and right sides
 //? On confirm: sets hasEmergencyAlertProvider to true locally.
 // TODO :: Wire confirmed stop to local MQTT publish if needed
 
@@ -12,9 +12,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& EmergencyStopButton Widget
 class EmergencyStopButton extends StatefulWidget {
@@ -30,13 +32,14 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: InkWell(
-          onTap: () => _showConfirmDialog(context),
+          onTap: () => _showConfirmDialog(context, l10n),
           child: SizedBox(
             width: double.infinity,
             height: 64,
@@ -51,7 +54,7 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
                       ? AppColors.errorSolid.withValues(alpha: 0.82)
                       : AppColors.errorSolid,
                 ),
-                //* Left pattern 
+                //* Left pattern
                 Positioned(
                   left: 0,
                   top: 0,
@@ -67,14 +70,16 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
                         child: SvgPicture.asset(
                           AppAssets.patternDotsLine,
                           fit: BoxFit.cover,
-                          colorFilter:
-                              const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                          colorFilter: ColorFilter.mode(
+                            AppColors.lightSurfaceCard,
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                //* Right pattern 
+                //* Right pattern — no flip; mirror of left strip
                 Positioned(
                   right: 0,
                   top: 0,
@@ -87,15 +92,12 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
                     child: ClipRect(
                       child: RotatedBox(
                         quarterTurns: 1,
-                        child: Transform.flip(
-                          flipX: true,
-                          child: SvgPicture.asset(
-                            AppAssets.patternDotsLine,
-                            fit: BoxFit.cover,
-                            colorFilter: const ColorFilter.mode(
-                              Colors.white,
-                              BlendMode.srcIn,
-                            ),
+                        child: SvgPicture.asset(
+                          AppAssets.patternDotsLine,
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            AppColors.lightSurfaceCard,
+                            BlendMode.srcIn,
                           ),
                         ),
                       ),
@@ -114,7 +116,8 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        'EMERGENCY STOP',
+                        l10n.emergencyStop,
+                        textDirection: textDirectionForUiLocale(context),
                         style: AppTypography.overlineS.copyWith(
                           color: AppColors.lightSurfaceCard,
                           letterSpacing: 2.5,
@@ -138,32 +141,42 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
   }
 
   //* On tap: show AlertDialog confirmation
-  void _showConfirmDialog(BuildContext context) {
-    showDialog(
+  void _showConfirmDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirm Emergency Stop'),
-        content: const Text('This will halt all irrigation immediately. Are you sure?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          l10n.emergencyStopConfirmTitle,
+          textDirection: textDirectionForUiLocale(dialogContext),
+        ),
+        content: Text(
+          l10n.emergencyStopConfirmBody,
+          textDirection: textDirectionForUiLocale(dialogContext),
+        ),
         actions: [
-          //* Actions: Cancel (outlined) , Confirm (red filled)
           OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              l10n.cancel,
+              textDirection: textDirectionForUiLocale(dialogContext),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
-              //* On confirm: log the action
               AppLogger.critical('EMERGENCY', 'Emergency stop triggered by user');
               // TODO :: Publish stop signal to MQTT topic: tazrout/emergency/stop
               // TODO :: Set hasEmergencyAlertProvider to true locally
               // TODO :: Wire emergency stop to MQTT when backend endpoint is live
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorSolid,
               foregroundColor: AppColors.lightSurfaceCard,
             ),
-            child: const Text('CONFIRM STOP'),
+            child: Text(
+              l10n.confirmEmergencyStop,
+              textDirection: textDirectionForUiLocale(dialogContext),
+            ),
           ),
         ],
       ),

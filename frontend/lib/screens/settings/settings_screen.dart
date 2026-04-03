@@ -7,8 +7,10 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../models/user_preferences_model.dart';
 import '../../../providers/preferences_provider.dart';
@@ -29,27 +31,36 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  //* Local draft state — user edits here before applying
-  late UserPreferencesModel _draft;
-  bool _isInitialized = false;
+  //* Local pending state — user edits here before applying
+  late UserPreferencesModel _pending;
+  bool _hasSeededPending = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      //* Initialize draft from preferencesProvider on first build
-      _draft = ref.read(preferencesProvider);
-      _isInitialized = true;
-    }
+  void initState() {
+    super.initState();
+    _pending = ref.read(preferencesProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentPrefs = ref.watch(preferencesProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (!_hasSeededPending) {
+      //* Seed pending once from provider (after async load completes)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _pending = currentPrefs;
+          _hasSeededPending = true;
+        });
+      });
+    }
 
     //* SingleChildScrollView wrapping
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Center(
@@ -57,17 +68,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             //* Centered content max width 800px
             constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: isArabic(context)
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 //* Page header
                 Text(
-                  'Settings',
+                  l10n.settingsTitle,
+                  textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
                   style: AppTypography.headingM.copyWith(
                     color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                   ),
                 ),
                 Text(
-                  'Manage your preferences and system configurations.',
+                  l10n.settingsSubtitle,
+                  textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
                   style: AppTypography.bodySRegular.copyWith(
                     color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                   ),
@@ -75,44 +90,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 24),
                 //* DisplaySettingsCard
                 DisplaySettingsCard(
-                  prefs: _draft,
-                  onChange: (updated) => setState(() => _draft = updated),
+                  prefs: _pending,
+                  onChange: (updated) => setState(() => _pending = updated),
                 ),
                 const SizedBox(height: 16),
                 //* SystemSettingsCard
                 SystemSettingsCard(
-                  prefs: _draft,
-                  onChange: (updated) => setState(() => _draft = updated),
+                  prefs: _pending,
+                  onChange: (updated) => setState(() => _pending = updated),
                 ),
                 const SizedBox(height: 16),
                 //* NotificationSettingsCard
                 NotificationSettingsCard(
-                  prefs: _draft,
-                  onChange: (updated) => setState(() => _draft = updated),
+                  prefs: _pending,
+                  onChange: (updated) => setState(() => _pending = updated),
                 ),
                 const SizedBox(height: 24),
                 //* Footer Row (right-aligned)
                 SettingsActionButtons(
                   onReset: () {
-                    //* Reset draft to factory defaults, not saved preferences
-                    setState(() => _draft = UserPreferencesModel.defaults);
+                    //* Reset pending to defaults, not saved preferences
+                    setState(() => _pending = UserPreferencesModel.defaults);
                     AppLogger.info('SETTINGS', 'Preferences reset to factory defaults');
                   },
                   onApply: () {
-                    //* Commit draft to global provider
-                    ref.read(preferencesProvider.notifier).state = _draft;
+                    //* Commit pending to global provider + persist
+                    ref.read(preferencesProvider.notifier).applyAll(_pending);
+
                     //* Apply theme change immediately
                     ref.read(themeModeProvider.notifier).state =
-                        _draft.theme == 'DARK' ? ThemeMode.dark : ThemeMode.light;
-                    
-                    //* Apply locale change immediately on Apply Settings
-                    final localeMap = {'EN': 'en', 'FR': 'fr', 'AR': 'ar'};
-                    final code = localeMap[_draft.language] ?? 'en';
-                    ref.read(localeProvider.notifier).state = Locale(code);
-                    AppLogger.state('SETTINGS', 'Locale set to $code');
+                        _pending.theme == 'Dark' ? ThemeMode.dark : ThemeMode.light;
 
-                    AppLogger.info('SETTINGS', 'Preferences applied: ${_draft.theme}');
-                    // TODO :: Publish _draft to MQTT topic: tazrout/settings/preferences
+                    //* Apply locale change immediately
+                    ref.read(localeProvider.notifier).state = Locale(_pending.language);
+                    AppLogger.state('SETTINGS', 'Locale set to ${_pending.language}');
+
+                    AppLogger.info('SETTINGS', 'Preferences applied: ${_pending.theme}');
+                    // TODO :: Publish _pending to MQTT topic: tazrout/settings/preferences
                   },
                 ),
               ],

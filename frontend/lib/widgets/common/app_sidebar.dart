@@ -1,13 +1,15 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tazrout_dashboard/core/localization/l10n/app_localizations.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../providers/navigation_provider.dart';
+import '../../providers/preferences_provider.dart';
 
 //& NavItem Model
 class _NavItem {
@@ -132,6 +134,7 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
     final currentRoute = GoRouterState.of(context).uri.toString();
     //* Theme state
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final animDuration = ref.watch(preferencesProvider).animDuration;
 
     //* Localized navigation items
     final navItems = _buildNavItems(context);
@@ -139,7 +142,7 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
     return ClipRect(
       child: AnimatedContainer(
         clipBehavior: Clip.hardEdge,
-        duration: const Duration(milliseconds: 200),
+        duration: animDuration,
         curve: Curves.easeInOut,
         width: isExpanded ? 220.0 : 68.0,
         color: isDark ? AppColors.darkSidebar : AppColors.lightSurfaceCard,
@@ -149,6 +152,7 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
             _SidebarHeader(
               isExpanded: isExpanded,
               isDark: isDark,
+              animDuration: animDuration,
               onToggle: () {
                 ref.read(sidebarExpandedProvider.notifier).state = !isExpanded;
               },
@@ -163,6 +167,7 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
                     isActive: currentRoute == item.route,
                     hasAlert: hasEmergency,
                     isDark: isDark,
+                    animDuration: animDuration,
                   );
                 }).toList(),
               ),
@@ -178,11 +183,13 @@ class _AppSidebarState extends ConsumerState<AppSidebar> {
 class _SidebarHeader extends StatelessWidget {
   final bool isExpanded;
   final bool isDark;
+  final Duration animDuration;
   final VoidCallback onToggle;
 
   const _SidebarHeader({
     required this.isExpanded,
     required this.isDark,
+    required this.animDuration,
     required this.onToggle,
   });
 
@@ -201,15 +208,20 @@ class _SidebarHeader extends StatelessWidget {
                   children: [
                     const SizedBox(width: 12),
                     //* Hamburger — LEFT side
-                    _HamburgerButton(isDark: isDark, onTap: onToggle),
+                    _HamburgerButton(
+                      isDark: isDark,
+                      animDuration: animDuration,
+                      onTap: onToggle,
+                    ),
                     const SizedBox(width: 12),
                     //* Logo — RIGHT side (inside AnimatedOpacity)
                     AnimatedOpacity(
                       opacity: isExpanded ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 80),
+                      duration: animDuration,
                       child: _SidebarLogo(
                         isDark: isDark,
                         isExpanded: isExpanded,
+                        animDuration: animDuration,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -217,7 +229,11 @@ class _SidebarHeader extends StatelessWidget {
                 ),
               )
             : Center(
-                child: _HamburgerButton(isDark: isDark, onTap: onToggle),
+                child: _HamburgerButton(
+                  isDark: isDark,
+                  animDuration: animDuration,
+                  onTap: onToggle,
+                ),
               ),
       ),
     );
@@ -228,10 +244,12 @@ class _SidebarHeader extends StatelessWidget {
 class _SidebarLogo extends StatefulWidget {
   final bool isDark;
   final bool isExpanded;
+  final Duration animDuration;
 
   const _SidebarLogo({
     required this.isDark,
     required this.isExpanded,
+    required this.animDuration,
   });
 
   @override
@@ -250,13 +268,13 @@ class _SidebarLogoState extends State<_SidebarLogo> {
       //* Subtle scale up on hover — makes it feel responsive
       child: AnimatedScale(
         scale: _isHovered ? 1.05 : 1.0,
-        duration: const Duration(milliseconds: 200),
+        duration: widget.animDuration,
         curve: Curves.easeInOut,
         //* Fixed size container prevents resize during crossfade
         child: SizedBox(
           height: 36,
           child: AnimatedCrossFade(
-            duration: const Duration(milliseconds: 250),
+            duration: widget.animDuration,
             firstCurve: Curves.easeInOut,
             secondCurve: Curves.easeInOut,
             crossFadeState: _isHovered
@@ -288,10 +306,12 @@ class _SidebarLogoState extends State<_SidebarLogo> {
 //& _HamburgerButton Widget
 class _HamburgerButton extends StatefulWidget {
   final bool isDark;
+  final Duration animDuration;
   final VoidCallback onTap;
 
   const _HamburgerButton({
     required this.isDark,
+    required this.animDuration,
     required this.onTap,
   });
 
@@ -312,13 +332,13 @@ class _HamburgerButtonState extends State<_HamburgerButton> {
         onTap: widget.onTap,
         borderRadius: BorderRadius.circular(8),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: widget.animDuration,
           width: 40,
           height: 40,
           decoration: BoxDecoration(
             color: _isHovered
                 ? AppColors.darkHoverSurface.withValues(alpha: 0.5)
-                : Colors.transparent,
+                : AppColors.lightSurfaceCard.withValues(alpha: 0.0),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
@@ -341,6 +361,7 @@ class _SidebarNavItem extends StatefulWidget {
   final bool isActive;
   final bool hasAlert;
   final bool isDark;
+  final Duration animDuration;
 
   const _SidebarNavItem({
     required this.item,
@@ -348,6 +369,7 @@ class _SidebarNavItem extends StatefulWidget {
     required this.isActive,
     required this.hasAlert,
     required this.isDark,
+    required this.animDuration,
   });
 
   @override
@@ -385,7 +407,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                   children: [
                     //* Base animated color background
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: widget.animDuration,
                       curve: Curves.easeInOut,
                       height: 44,
                       decoration: BoxDecoration(
@@ -404,13 +426,15 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    //* Pattern overlay — subtle, right-aligned, fades in smoothly
-                    AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      opacity: _isHovered && !widget.isActive ? 1.0 : 0.0,
-                      child: Align(
-                        alignment: Alignment.centerRight,
+                    //* Pattern overlay — subtle, fixed to right edge (right: 2)
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      right: 2,
+                      child: AnimatedOpacity(
+                        duration: widget.animDuration,
+                        curve: Curves.easeInOut,
+                        opacity: _isHovered && !widget.isActive ? 1.0 : 0.0,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: SvgPicture.asset(
@@ -431,6 +455,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            //* Icon — always exists on left
                             SizedBox(
                               width: 24,
                               height: 24,
@@ -439,35 +464,40 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Flexible(
-                              child: Text(
-                                widget.item.label,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                softWrap: false,
-                                style: widget.isActive
-                                    ? AppTypography.bodySMedium.copyWith(
-                                        color: widget.item.isEmergency
-                                            ? AppColors.errorSolid
-                                            : AppColors.primaryDark)
-                                    : AppTypography.bodySMedium.copyWith(
-                                        color: widget.isDark
-                                            ? AppColors.darkMutedText
-                                            : AppColors.lightBodyText),
-                              ),
-                            ),
-                            //* Emergency alert dot
-                            if (widget.item.isEmergency && widget.hasAlert) ...[
-                              const SizedBox(width: 4),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.errorSolid,
-                                  shape: BoxShape.circle,
+                            //* Spacer + Label if expanded
+                            if (widget.isExpanded) ...[
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Text(
+                                  widget.item.label,
+                                  textAlign: isArabic(context) ? TextAlign.right : TextAlign.start,
+                                  textDirection: textDirectionForUiLocale(context),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: widget.isActive
+                                      ? AppTypography.bodySMedium.copyWith(
+                                          color: widget.item.isEmergency
+                                              ? AppColors.errorSolid
+                                              : AppColors.primaryLight)
+                                      : AppTypography.bodySMedium.copyWith(
+                                          color: widget.isDark
+                                              ? AppColors.darkMutedText
+                                              : AppColors.lightBodyText),
                                 ),
                               ),
+                              //* Emergency alert dot
+                              if (widget.item.isEmergency && widget.hasAlert) ...[
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.errorSolid,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ],
                           ],
                         ),
@@ -492,7 +522,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                                 ? (widget.isDark
                                     ? AppColors.darkHoverSurface.withValues(alpha: 0.6)
                                     : AppColors.lightElevatedCard)
-                                : Colors.transparent,
+                                : AppColors.lightSurfaceCard.withValues(alpha: 0.0),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(

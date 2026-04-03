@@ -6,9 +6,11 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 
 //& WelcomeCard
 class WelcomeCard extends StatefulWidget {
@@ -24,6 +26,7 @@ class _WelcomeCardState extends State<WelcomeCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -96,7 +99,8 @@ class _WelcomeCardState extends State<WelcomeCard> {
                     //* Welcome title
                     // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
                     Text(
-                      'Welcome Back!',
+                      l10n.welcomeBack,
+                      textAlign: isArabic(context) ? TextAlign.right : TextAlign.center,
                       style: AppTypography.headingM.copyWith(
                         color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                       ),
@@ -105,8 +109,8 @@ class _WelcomeCardState extends State<WelcomeCard> {
                     //* Status description text
                     // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
                     Text(
-                      'All agricultural systems are running within optimal parameters today.',
-                      textAlign: TextAlign.center,
+                      l10n.systemStatus,
+                      textAlign: isArabic(context) ? TextAlign.right : TextAlign.center,
                       style: AppTypography.bodySRegular.copyWith(
                         color: isDark ? AppColors.darkMutedText : AppColors.lightBodyText,
                       ),

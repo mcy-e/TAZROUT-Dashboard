@@ -8,8 +8,10 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 import 'mac_window_chrome.dart';
 
 //& DocumentViewerCard Widget
@@ -20,6 +22,7 @@ class DocumentViewerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -33,19 +36,16 @@ class DocumentViewerCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          //* macOS-style window chrome
-          const MacWindowChrome(fileName: 'manual_v2.0.pdf'),
+          MacWindowChrome(fileName: l10n.manualPdfFileName),
           Expanded(
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  //* Icon placeholder for empty state
                   Container(
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      //* bg: AppColors.darkElevatedCard (dark) / AppColors.lightElevatedCard (light)
                       color: isDark ? AppColors.darkElevatedCard : AppColors.lightElevatedCard,
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -56,22 +56,20 @@ class DocumentViewerCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  //* Title
                   Text(
-                    'Document Helper',
+                    l10n.documentHelperTitle,
+                    textDirection: textDirectionForUiLocale(context),
                     style: AppTypography.headingS.copyWith(
                       color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  //* Description
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Text(
-                      'The comprehensive user manual content will be rendered here.\n'
-                      'This area is designed to handle embedded PDF viewers\n'
-                      'or rich text documentation.',
+                      l10n.documentHelperBody,
                       textAlign: TextAlign.center,
+                      textDirection: textDirectionForUiLocale(context),
                       style: AppTypography.bodySRegular.copyWith(
                         color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                       ),
@@ -82,7 +80,6 @@ class DocumentViewerCard extends StatelessWidget {
               ),
             ),
           ),
-          //* Internal card footer
           Divider(
             color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
             height: 1,
@@ -90,7 +87,8 @@ class DocumentViewerCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Last updated: Oct 24, 2024 • Version 2.0',
+              l10n.manualFooterMeta,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.labelXSRegular.copyWith(
                 color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
               ),

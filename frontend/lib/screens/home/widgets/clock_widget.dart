@@ -6,41 +6,59 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_assets.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../providers/preferences_provider.dart';
 
 //& ClockWidget
-class ClockWidget extends StatefulWidget {
+class ClockWidget extends ConsumerStatefulWidget {
   //* StatefulWidget with a Timer.periodic(1 second) to update time
   const ClockWidget({super.key});
 
   @override
-  State<ClockWidget> createState() => _ClockWidgetState();
+  ConsumerState<ClockWidget> createState() => _ClockWidgetState();
 }
 
-class _ClockWidgetState extends State<ClockWidget> {
+class _ClockWidgetState extends ConsumerState<ClockWidget> {
   late Timer _timer;
   late DateTime _currentTime;
   bool _isHovered = false;
+  Duration _tickInterval = const Duration(seconds: 1);
 
   @override
   void initState() {
     super.initState();
     _currentTime = DateTime.now();
-    //* Timer to update time every second
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(_tickInterval, (timer) {
       if (mounted) {
         setState(() {
           _currentTime = DateTime.now();
         });
-        //* AppLogger.debug('CLOCK', 'Tick: $currentTime') — only in debug
         AppLogger.debug('CLOCK', 'Tick: $_currentTime');
       }
     });
+  }
+
+  void _updateTimerForPowerSaving(bool powerSaving) {
+    final nextInterval = powerSaving
+        ? const Duration(seconds: 10)
+        : const Duration(seconds: 1);
+    debugPrint('[PowerSaving] tick interval: $nextInterval, powerSaving: $powerSaving');
+    // TODO :: Remove this temporary power-saving debug log after QA confirmation.
+    if (nextInterval == _tickInterval) return;
+    _tickInterval = nextInterval;
+    _timer.cancel();
+    _startTimer();
   }
 
   @override
@@ -53,7 +71,13 @@ class _ClockWidgetState extends State<ClockWidget> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final digitalTime = DateFormat('HH:mm:ss').format(_currentTime);
+    final prefs = ref.watch(preferencesProvider);
+    final l10n = AppLocalizations.of(context)!;
+    _updateTimerForPowerSaving(prefs.powerSaving);
+    final use24h = prefs.timeFormat == '24 Hours';
+    final digitalTime = use24h
+        ? DateFormat('HH:mm:ss').format(_currentTime)
+        : DateFormat('hh:mm:ss a').format(_currentTime);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -124,7 +148,7 @@ class _ClockWidgetState extends State<ClockWidget> {
               children: [
                 //* Text("TIME") AppTypography.overlineXS muted
                 Text(
-                  'TIME',
+                  l10n.time,
                   style: AppTypography.overlineXS.copyWith(
                     color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                   ),

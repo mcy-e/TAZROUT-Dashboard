@@ -3,9 +3,12 @@
 
 //& Imports
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../models/user_preferences_model.dart';
 import 'settings_dropdown_row.dart';
 
@@ -24,6 +27,8 @@ class DisplaySettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final languageLabel = _languageLabelFromCode(prefs.language);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -37,73 +42,126 @@ class DisplaySettingsCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: isArabic(context)
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             //* Row header: Icon + Title
             Row(
-              children: [
-                Icon(
-                  PhosphorIcons.monitor(),
-                  size: 20,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Display Settings',
-                  style: AppTypography.headingS.copyWith(
-                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                  ),
-                ),
-              ],
+              mainAxisSize: MainAxisSize.min,
+              children: isArabic(context)
+                  ? [
+                      Text(
+                        l10n.settingsDisplayTitle,
+                        textAlign: TextAlign.right,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SvgPicture.asset(
+                        isDark
+                            ? AppAssets.darkIconScreenSettings
+                            : AppAssets.lightIconScreenSettings,
+                        width: 22,
+                        height: 22,
+                      ),
+                    ]
+                  : [
+                      SvgPicture.asset(
+                        isDark
+                            ? AppAssets.darkIconScreenSettings
+                            : AppAssets.lightIconScreenSettings,
+                        width: 22,
+                        height: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.settingsDisplayTitle,
+                        textAlign: TextAlign.left,
+                        textDirection: textDirectionForUiLocale(context),
+                        style: AppTypography.headingS.copyWith(
+                          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                        ),
+                      ),
+                    ],
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Switch Language
             SettingsDropdownRow(
-              label: 'Switch Language',
-              subtitle: 'Select your preferred interface language.',
-              value: prefs.language,
-              options: const ['EN', 'FR', 'AR'],
-              onChanged: (val) => onChange(prefs.copyWith(language: val)),
+              label: l10n.settingsLanguage,
+              subtitle: l10n.settingsLanguageSubtitle,
+              value: languageLabel,
+              options: const ['English', 'Français', 'العربية'],
+              onChanged: (val) => onChange(
+                prefs.copyWith(language: _languageCodeFromLabel(val)),
+              ),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Switch Theme
             SettingsDropdownRow(
-              label: 'Switch Theme',
-              subtitle: 'Toggle between Light and Dark mode.',
+              label: l10n.settingsTheme,
+              subtitle: l10n.settingsThemeSubtitle,
               value: prefs.theme,
-              options: const ['LIGHT', 'DARK'],
+              options: const ['Light', 'Dark'],
               onChanged: (val) => onChange(prefs.copyWith(theme: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Switch Font Size
             SettingsDropdownRow(
-              label: 'Switch Font Size',
-              subtitle: 'Adjust the text size for better readability.',
+              label: l10n.settingsFontSize,
+              subtitle: l10n.settingsFontSizeSubtitle,
               value: prefs.fontSize,
-              options: const ['SMALL', 'MEDIUM', 'LARGE'],
+              options: const ['Small', 'Medium', 'Large'],
               onChanged: (val) => onChange(prefs.copyWith(fontSize: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Date Format
             SettingsDropdownRow(
-              label: 'Date Format',
-              subtitle: 'Choose how dates are displayed.',
+              label: l10n.settingsDateFormat,
+              subtitle: l10n.settingsDateFormatSubtitle,
               value: prefs.dateFormat,
-              options: const ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
+              options: const ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY/MM/DD'],
               onChanged: (val) => onChange(prefs.copyWith(dateFormat: val)),
             ),
             const Divider(height: 24, color: AppColors.darkStrokeDivider),
             //* Time Format
             SettingsDropdownRow(
-              label: 'Time Format',
-              subtitle: 'Choose between 12-hour and 24-hour clocks.',
+              label: l10n.settingsTimeFormat,
+              subtitle: l10n.settingsTimeFormatSubtitle,
               value: prefs.timeFormat,
-              options: const ['24H', '12H'],
+              options: const ['24 Hours', '12 Hours'],
               onChanged: (val) => onChange(prefs.copyWith(timeFormat: val)),
             ),
           ],
         ),
       ),
     );
+  }
+
+  //* Language mapping (UI label <-> stored locale code)
+  static String _languageLabelFromCode(String code) {
+    switch (code) {
+      case 'fr':
+        return 'Français';
+      case 'ar':
+        return 'العربية';
+      case 'en':
+      default:
+        return 'English';
+    }
+  }
+
+  static String _languageCodeFromLabel(String label) {
+    switch (label) {
+      case 'Français':
+        return 'fr';
+      case 'العربية':
+        return 'ar';
+      case 'English':
+      default:
+        return 'en';
+    }
   }
 }

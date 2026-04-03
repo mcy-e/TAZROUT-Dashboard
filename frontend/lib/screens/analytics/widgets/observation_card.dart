@@ -6,27 +6,33 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../../../providers/preferences_provider.dart';
 
 //& ObservationCard Widget
-class ObservationCard extends StatefulWidget {
+class ObservationCard extends ConsumerStatefulWidget {
   //* StatefulWidget — displays AI observation details
   const ObservationCard({super.key});
 
   @override
-  State<ObservationCard> createState() => _ObservationCardState();
+  ConsumerState<ObservationCard> createState() => _ObservationCardState();
 }
 
 //& _ObservationCardState
-class _ObservationCardState extends State<ObservationCard> {
+class _ObservationCardState extends ConsumerState<ObservationCard> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final animDuration = ref.watch(preferencesProvider).animDuration;
 
     final borderColor = _isHovered
         ? AppColors.series3Amber.withValues(alpha: 0.60)
@@ -41,7 +47,7 @@ class _ObservationCardState extends State<ObservationCard> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: animDuration,
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard,
@@ -66,7 +72,7 @@ class _ObservationCardState extends State<ObservationCard> {
                     topRight: Radius.circular(12),
                   ),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: animDuration,
                     curve: Curves.easeInOut,
                     child: ImageFiltered(
                       imageFilter: _isHovered
@@ -89,38 +95,73 @@ class _ObservationCardState extends State<ObservationCard> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 28, 12, 12),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: isArabic(context)
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     //* Header row — constrained width
                     Row(
-                      children: [
-                        AnimatedScale(
-                          scale: _isHovered ? 1.20 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeInOut,
-                          child: SvgPicture.asset(
-                            isDark
-                                ? AppAssets.darkIconObservation
-                                : AppAssets.lightIconObservation,
-                            width: 18,
-                            height: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'Observation',
-                            style: AppTypography.headingXS.copyWith(
-                              color: isDark
-                                  ? AppColors.darkPrimaryText
-                                  : AppColors.lightPrimaryText,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
+                      mainAxisSize: MainAxisSize.min,
+                      children: isArabic(context)
+                          ? [
+                              Flexible(
+                                child: Text(
+                                  l10n.observationTitle,
+                                  textAlign: TextAlign.right,
+                                  textDirection: textDirectionForUiLocale(context),
+                                  style: AppTypography.headingXS.copyWith(
+                                    color: isDark
+                                        ? AppColors.darkPrimaryText
+                                        : AppColors.lightPrimaryText,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              AnimatedScale(
+                                scale: _isHovered ? 1.20 : 1.0,
+                                duration: animDuration,
+                                curve: Curves.easeInOut,
+                                child: SvgPicture.asset(
+                                  isDark
+                                      ? AppAssets.darkIconObservation
+                                      : AppAssets.lightIconObservation,
+                                  width: 18,
+                                  height: 18,
+                                ),
+                              ),
+                            ]
+                          : [
+                              AnimatedScale(
+                                scale: _isHovered ? 1.20 : 1.0,
+                                duration: animDuration,
+                                curve: Curves.easeInOut,
+                                child: SvgPicture.asset(
+                                  isDark
+                                      ? AppAssets.darkIconObservation
+                                      : AppAssets.lightIconObservation,
+                                  width: 18,
+                                  height: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  l10n.observationTitle,
+                                  textAlign: TextAlign.left,
+                                  textDirection: textDirectionForUiLocale(context),
+                                  style: AppTypography.headingXS.copyWith(
+                                    color: isDark
+                                        ? AppColors.darkPrimaryText
+                                        : AppColors.lightPrimaryText,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
                     ),
                     const SizedBox(height: 8),
                     //* Inner box — let it shrink, never overflow
@@ -138,7 +179,9 @@ class _ObservationCardState extends State<ObservationCard> {
                           ),
                         ),
                         child: Text(
+                          // DATA — no l10n, comes from MQTT/API
                           'Detected high temperature variance in Zone D sensor array.',
+                          textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.bodySRegular.copyWith(
                             color: isDark
                                 ? AppColors.darkBodyText

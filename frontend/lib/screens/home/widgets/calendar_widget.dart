@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -25,6 +26,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     
     //* Date computation
     final now = DateTime.now();
@@ -107,7 +109,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                       children: [
                         //* Label: Text("TODAY") AppTypography.overlineXS muted uppercase
                         Text(
-                          'TODAY',
+                          l10n.today,
                           style: AppTypography.overlineXS.copyWith(
                             color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                           ),
@@ -138,7 +140,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'No events scheduled',
+                              l10n.noEvents,
                               style: AppTypography.labelXSRegular.copyWith(
                                 color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                               ),

@@ -7,8 +7,10 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../core/theme/app_typography.dart';
 import 'widgets/zone_status_grid.dart';
 import 'widgets/emergency_stop_button.dart';
@@ -21,6 +23,7 @@ class EmergencyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     //* Static list of 9 zones with mixed online/offline states
     // TODO :: Replace with real MQTT data from topic: tazrout/emergency/status
@@ -37,7 +40,7 @@ class EmergencyScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         child: Column(
@@ -52,34 +55,61 @@ class EmergencyScreen extends StatelessWidget {
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: isArabic(context)
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         IntrinsicHeight(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SvgPicture.asset(
-                                isDark
-                                    ? AppAssets.darkIconEmergencyIcon
-                                    : AppAssets.lightIconEmergencyIcon,
-                                width: 22,
-                                height: 22,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Emergency Control',
-                                style: AppTypography.headingM.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkPrimaryText
-                                      : AppColors.lightPrimaryText,
-                                ),
-                              ),
-                            ],
+                            children: isArabic(context)
+                                ? [
+                                    Text(
+                                      l10n.emergencyTitle,
+                                      textAlign: TextAlign.right,
+                                      textDirection: textDirectionForUiLocale(context),
+                                      style: AppTypography.headingM.copyWith(
+                                        color: isDark
+                                            ? AppColors.darkPrimaryText
+                                            : AppColors.lightPrimaryText,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    SvgPicture.asset(
+                                      isDark
+                                          ? AppAssets.darkIconEmergencyIcon
+                                          : AppAssets.lightIconEmergencyIcon,
+                                      width: 22,
+                                      height: 22,
+                                    ),
+                                  ]
+                                : [
+                                    SvgPicture.asset(
+                                      isDark
+                                          ? AppAssets.darkIconEmergencyIcon
+                                          : AppAssets.lightIconEmergencyIcon,
+                                      width: 22,
+                                      height: 22,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.emergencyTitle,
+                                      textAlign: TextAlign.left,
+                                      textDirection: textDirectionForUiLocale(context),
+                                      style: AppTypography.headingM.copyWith(
+                                        color: isDark
+                                            ? AppColors.darkPrimaryText
+                                            : AppColors.lightPrimaryText,
+                                      ),
+                                    ),
+                                  ],
                           ),
                         ),
                         Text(
-                          'Monitor live independent device states. In case of system failure or hazard, initiate emergency stop immediately.',
+                          l10n.emergencySubtitle,
+                          textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
+                          textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.bodySRegular.copyWith(
                             color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                           ),

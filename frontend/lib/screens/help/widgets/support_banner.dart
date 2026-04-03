@@ -7,9 +7,11 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& SupportBanner Widget
 class SupportBanner extends StatelessWidget {
@@ -24,6 +26,7 @@ class SupportBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     //* Container full width, borderRadius 12px, padding 24px
     return Container(
@@ -52,22 +55,21 @@ class SupportBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                //* Text("Still need assistance?") AppTypography.headingS color: Colors.white
                 Text(
-                  'Still need assistance?',
-                  style: AppTypography.headingS.copyWith(color: Colors.white),
+                  l10n.supportStillNeedTitle,
+                  textDirection: textDirectionForUiLocale(context),
+                  style: AppTypography.headingS.copyWith(color: AppColors.lightSurfaceCard),
                 ),
                 const SizedBox(height: 8),
-                //* Text description
                 Text(
-                  'Our support team is available 24/7 to help you resolve any issues regarding the system.',
+                  l10n.supportTeamAvailable,
                   textAlign: TextAlign.center,
+                  textDirection: textDirectionForUiLocale(context),
                   style: AppTypography.bodySRegular.copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: AppColors.lightSurfaceCard.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 16),
-                //* Get Support button
                 OutlinedButton.icon(
                   onPressed: () {
                     AppLogger.info('HELP', 'Get Support button tapped');
@@ -76,14 +78,15 @@ class SupportBanner extends StatelessWidget {
                   icon: Icon(
                     PhosphorIcons.arrowRight(),
                     size: 16,
-                    color: Colors.white,
+                    color: AppColors.lightSurfaceCard,
                   ),
                   label: Text(
-                    'Get Support',
-                    style: AppTypography.bodySMedium.copyWith(color: Colors.white),
+                    l10n.supportGetSupport,
+                    textDirection: textDirectionForUiLocale(context),
+                    style: AppTypography.bodySMedium.copyWith(color: AppColors.lightSurfaceCard),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white),
+                    side: BorderSide(color: AppColors.lightSurfaceCard),
                     minimumSize: const Size(140, 44),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

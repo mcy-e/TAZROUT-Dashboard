@@ -6,6 +6,7 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -25,6 +26,7 @@ class ZoneValveBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     //* Container full width, height 44px, borderRadius bottom 8px
     return Container(
@@ -43,7 +45,7 @@ class ZoneValveBar extends StatelessWidget {
         children: [
           //* Text("VALVE STATE") AppTypography.overlineXS muted
           Text(
-            'VALVE STATE',
+            l10n.valveState,
             style: AppTypography.overlineXS.copyWith(
               color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
             ),
@@ -70,7 +72,7 @@ class ZoneValveBar extends StatelessWidget {
           const SizedBox(width: 6),
           //* Text(isValveOpen ? "Open" : "Closed") AppTypography.bodySMedium
           Text(
-            isValveOpen ? 'Open' : 'Closed',
+            isValveOpen ? l10n.open : l10n.closed,
             style: AppTypography.bodySMedium.copyWith(
               color: isValveOpen 
                   ? AppColors.series2Blue 

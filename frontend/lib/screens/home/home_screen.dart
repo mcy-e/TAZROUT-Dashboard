@@ -3,6 +3,7 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import 'widgets/system_controls_card.dart';
 import 'widgets/welcome_card.dart';
 import 'widgets/did_you_know_card.dart';
@@ -20,7 +21,7 @@ class HomeScreen extends StatelessWidget {
     //* Use LayoutBuilder to get parent constraints
     //* Then use SizedBox with explicit heights based on available space
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: LayoutBuilder(

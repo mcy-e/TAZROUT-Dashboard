@@ -4,31 +4,38 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../../../providers/preferences_provider.dart';
 
 //& AiLatestDecisionCard Widget
-class AiLatestDecisionCard extends StatefulWidget {
+class AiLatestDecisionCard extends ConsumerStatefulWidget {
   const AiLatestDecisionCard({super.key});
 
   @override
-  State<AiLatestDecisionCard> createState() => _AiLatestDecisionCardState();
+  ConsumerState<AiLatestDecisionCard> createState() => _AiLatestDecisionCardState();
 }
 
-class _AiLatestDecisionCardState extends State<AiLatestDecisionCard> {
+class _AiLatestDecisionCardState extends ConsumerState<AiLatestDecisionCard> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final animDuration = ref.watch(preferencesProvider).animDuration;
     final strokeDivider =
         isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider;
     final panelColor =
         isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard;
 
     // TODO :: Replace with MQTT topic: tazrout/ai/latest-decision
+    // DATA — no l10n, comes from MQTT/API
     final decisionText =
         'Initiated precision irrigation sequence for Zone A, B, and C. Soil moisture analysis indicated levels below critical threshold (< 30%).';
 
@@ -65,34 +72,66 @@ class _AiLatestDecisionCardState extends State<AiLatestDecisionCard> {
                   ),
                   //* Left accent bar — separate widget, no border conflict
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 200),
+                    duration: animDuration,
                     curve: Curves.easeInOut,
                     top: 0,
-                    left: 0,
+                    left: isArabic(context) ? null : 0,
+                    right: isArabic(context) ? 0 : null,
                     bottom: 0,
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: animDuration,
                       curve: Curves.easeInOut,
                       width: _isHovered ? 5.0 : 3.5,
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          bottomLeft: Radius.circular(12),
+                        borderRadius: BorderRadius.only(
+                          topLeft: isArabic(context) ? Radius.zero : const Radius.circular(12),
+                          bottomLeft: isArabic(context) ? Radius.zero : const Radius.circular(12),
+                          topRight: isArabic(context) ? const Radius.circular(12) : Radius.zero,
+                          bottomRight: isArabic(context) ? const Radius.circular(12) : Radius.zero,
                         ),
                       ),
                     ),
                   ),
-                  //* Pattern — full-height right side
+                  //* Top pattern
                   Positioned(
                     top: 0,
-                    right: 0,
+                    left: isArabic(context) ? 0 : null,
+                    right: isArabic(context) ? null : 0,
+                    width: 64,
+                    height: 64,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        topLeft: isArabic(context) ? const Radius.circular(12) : Radius.zero,
+                        topRight: isArabic(context) ? Radius.zero : const Radius.circular(12),
+                      ),
+                      child: Transform.flip(
+                        flipX: isArabic(context),
+                        child: SvgPicture.asset(
+                          AppAssets.patternCircleMedallion,
+                          fit: BoxFit.cover,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  //* Bottom pattern
+                  Positioned(
                     bottom: 0,
-                    width: 72,
-                    child: Transform.flip(
-                      flipX: true,
-                      child: Opacity(
-                        opacity: 1.0,
+                    left: isArabic(context) ? 0 : null,
+                    right: isArabic(context) ? null : 0,
+                    width: 64,
+                    height: 64,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: isArabic(context) ? const Radius.circular(12) : Radius.zero,
+                        bottomRight: isArabic(context) ? Radius.zero : const Radius.circular(12),
+                      ),
+                      child: Transform.flip(
+                        flipX: isArabic(context),
                         child: SvgPicture.asset(
                           AppAssets.patternCircleMedallion,
                           fit: BoxFit.cover,
@@ -106,36 +145,72 @@ class _AiLatestDecisionCardState extends State<AiLatestDecisionCard> {
                   ),
                   //* Main content
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+                    padding: EdgeInsets.only(
+                      left: isArabic(context) ? 14 : 18,
+                      right: isArabic(context) ? 18 : 14,
+                      top: 14,
+                      bottom: 14,
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: isArabic(context)
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         //* Header
                         Row(
-                          children: [
-                            AnimatedScale(
-                              scale: _isHovered ? 1.20 : 1.0,
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeInOut,
-                              child: SvgPicture.asset(
-                                isDark
-                                    ? AppAssets.darkIconAiDecision
-                                    : AppAssets.lightIconAiDecision,
-                                width: 20,
-                                height: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'AI Latest Decision',
-                              style: AppTypography.headingXS.copyWith(
-                                color: isDark
-                                    ? AppColors.darkPrimaryText
-                                    : AppColors.lightPrimaryText,
-                              ),
-                            ),
-                          ],
+                          mainAxisSize: MainAxisSize.min,
+                          children: isArabic(context)
+                              ? [
+                                  Text(
+                                    l10n.aiLatestDecisionTitle,
+                                    textAlign: TextAlign.right,
+                                    textDirection: textDirectionForUiLocale(context),
+                                    style: AppTypography.headingXS.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkPrimaryText
+                                          : AppColors.lightPrimaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  AnimatedScale(
+                                    scale: _isHovered ? 1.20 : 1.0,
+                                    duration: animDuration,
+                                    curve: Curves.easeInOut,
+                                    child: SvgPicture.asset(
+                                      isDark
+                                          ? AppAssets.darkIconAiDecision
+                                          : AppAssets.lightIconAiDecision,
+                                      width: 20,
+                                      height: 20,
+                                    ),
+                                  ),
+                                ]
+                              : [
+                                  AnimatedScale(
+                                    scale: _isHovered ? 1.20 : 1.0,
+                                    duration: animDuration,
+                                    curve: Curves.easeInOut,
+                                    child: SvgPicture.asset(
+                                      isDark
+                                          ? AppAssets.darkIconAiDecision
+                                          : AppAssets.lightIconAiDecision,
+                                      width: 20,
+                                      height: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.aiLatestDecisionTitle,
+                                    textAlign: TextAlign.left,
+                                    textDirection: textDirectionForUiLocale(context),
+                                    style: AppTypography.headingXS.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkPrimaryText
+                                          : AppColors.lightPrimaryText,
+                                    ),
+                                  ),
+                                ],
                         ),
                         const SizedBox(height: 12),
                         //* Decision text in elevated inner box
@@ -156,6 +231,7 @@ class _AiLatestDecisionCardState extends State<AiLatestDecisionCard> {
                             ),
                             child: Text(
                               '"$decisionText"',
+                              textDirection: textDirectionForUiLocale(context),
                               style: AppTypography.bodySRegular.copyWith(
                                 color: isDark
                                     ? AppColors.darkBodyText

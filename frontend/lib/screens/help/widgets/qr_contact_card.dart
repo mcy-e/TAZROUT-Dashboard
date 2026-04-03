@@ -10,9 +10,11 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& QrContactCard Widget
 class QrContactCard extends StatelessWidget {
@@ -22,6 +24,7 @@ class QrContactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: ConstrainedBox(
@@ -53,7 +56,7 @@ class QrContactCard extends StatelessWidget {
                         color: AppColors.darkMutedText,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
-                      tooltip: 'Close',
+                      tooltip: l10n.closeTooltip,
                     ),
                   ),
                   //* Foreground content
@@ -62,18 +65,18 @@ class QrContactCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        //* Text("More Help ?") AppTypography.headingM
                         Text(
-                          'More Help ?',
+                          l10n.helpMoreHelpTitle,
+                          textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.headingM.copyWith(
                             color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        //* Description
                         Text(
-                          'Scan the code below or call the following number for More Help.',
+                          l10n.helpScanCodeCall,
                           textAlign: TextAlign.center,
+                          textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.bodySRegular.copyWith(
                             color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                           ),
@@ -98,7 +101,7 @@ class QrContactCard extends StatelessWidget {
                         ),
                         // TODO :: Replace with QrImageView widget
                         const SizedBox(height: 24),
-                        //* Website row
+                        //* Website row — DATA placeholder URL
                         _ContactRow(
                           icon: PhosphorIcons.globe(),
                           text: 'Tazrout/help.com',
@@ -106,7 +109,7 @@ class QrContactCard extends StatelessWidget {
                           // TODO :: Open URL via url_launcher
                         ),
                         const SizedBox(height: 12),
-                        //* Phone row
+                        //* Phone row — DATA placeholder
                         _ContactRow(
                           icon: PhosphorIcons.phone(),
                           text: '+213-55-55-55-55',
@@ -124,7 +127,6 @@ class QrContactCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                //* bg: AppColors.darkPanelCard (dark) / AppColors.lightElevatedCard (light)
                 color: isDark ? AppColors.darkPanelCard : AppColors.lightElevatedCard,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -148,13 +150,15 @@ class QrContactCard extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text: 'Still need assistance? ',
+                            text: l10n.helpSupportFooterBold,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                             ),
                           ),
-                          const TextSpan(text: 'Our support team is available 24/7...'),
+                          TextSpan(
+                            text: l10n.helpSupportFooterRest,
+                          ),
                         ],
                       ),
                     ),
@@ -206,8 +210,6 @@ class _ContactRowState extends State<_ContactRow> {
           constraints: const BoxConstraints(minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            //* default bg: AppColors.darkElevatedCard (dark) / AppColors.lightElevatedCard (light)
-            //* hover bg: AppColors.primary10
             color: _isHovered
                 ? AppColors.primary10
                 : (isDark ? AppColors.darkElevatedCard : AppColors.lightElevatedCard),
@@ -219,6 +221,7 @@ class _ContactRowState extends State<_ContactRow> {
               const SizedBox(width: 12),
               Text(
                 widget.text,
+                textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.bodySMedium.copyWith(
                   color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                 ),

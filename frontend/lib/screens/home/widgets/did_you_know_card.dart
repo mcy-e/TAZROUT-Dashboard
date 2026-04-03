@@ -6,6 +6,7 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -24,6 +25,7 @@ class _DidYouKnowCardState extends State<DidYouKnowCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -120,7 +122,7 @@ class _DidYouKnowCardState extends State<DidYouKnowCard> {
                         ),
                       ),
                       Text(
-                        'DID YOU KNOW?',
+                        l10n.didYouKnow,
                         style: AppTypography.overlineS.copyWith(
                           color: AppColors.primary,
                         ),

@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& FaqCard Widget
 class FaqCard extends StatefulWidget {
@@ -86,6 +87,7 @@ class _FaqCardState extends State<FaqCard> {
                     //* Text(title) AppTypography.bodySBold
                     Text(
                       widget.title,
+                      textDirection: textDirectionForUiLocale(context),
                       style: AppTypography.bodySBold.copyWith(
                         color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                       ),
@@ -94,6 +96,7 @@ class _FaqCardState extends State<FaqCard> {
                     //* Text(description) AppTypography.bodySRegular muted
                     Text(
                       widget.description,
+                      textDirection: textDirectionForUiLocale(context),
                       style: AppTypography.bodySRegular.copyWith(
                         color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
                       ),

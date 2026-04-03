@@ -3,8 +3,10 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/locale_text_direction.dart';
 
 //& ZoneStatsRow Widget
 class ZoneStatsRow extends StatelessWidget {
@@ -25,27 +27,28 @@ class ZoneStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     //* Column of 3 Rows
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         _buildStatRow(
-          'T : C°',
+          l10n.zoneStatsTempLabel,
           isOnline ? '${temperature.toStringAsFixed(0)}°C' : '-',
           context,
           isDark,
         ),
         const SizedBox(height: 4),
         _buildStatRow(
-          'M : g/m³',
+          l10n.zoneStatsMoistureLabel,
           isOnline ? moisture.toStringAsFixed(0) : '-',
           context,
           isDark,
         ),
         const SizedBox(height: 4),
         _buildStatRow(
-          'Water : %',
+          l10n.zoneStatsWaterLabel,
           isOnline ? '${(waterLevel * 100).toStringAsFixed(0)}%' : '-',
           context,
           isDark,
@@ -65,15 +68,17 @@ class ZoneStatsRow extends StatelessWidget {
             width: 60,
             child: Text(
               label,
+              textDirection: textDirectionForUiLocale(context),
               style: AppTypography.captionMedium.copyWith(
                 color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
               ),
             ),
           ),
           const Spacer(),
-          //* Text(value) AppTypography.bodySBold
+          //* Text(value) AppTypography.bodySBold — DATA
           Text(
             value,
+            textDirection: textDirectionForUiLocale(context),
             style: AppTypography.bodySBold.copyWith(
               color: isOnline
                   ? (isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText)

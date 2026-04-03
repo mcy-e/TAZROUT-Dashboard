@@ -5,6 +5,7 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -22,6 +23,7 @@ class ZoneDeviceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     //* Container with AppColors.darkPanelCard (dark) or AppColors.lightElevatedCard (light) background
     return Container(
@@ -37,7 +39,7 @@ class ZoneDeviceBadge extends StatelessWidget {
         children: [
           //* Text("DEVICE STATE") AppTypography.overlineXS muted
           Text(
-            'DEVICE STATE',
+            l10n.deviceState,
             style: AppTypography.overlineXS.copyWith(
               color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
             ),
@@ -65,7 +67,7 @@ class ZoneDeviceBadge extends StatelessWidget {
               const SizedBox(width: 6),
               //* Text(isOnline ? "Online" : "Offline") AppTypography.bodySMedium
               Text(
-                isOnline ? 'Online' : 'Offline',
+                isOnline ? l10n.online : l10n.offline,
                 style: AppTypography.bodySMedium.copyWith(
                   color: isOnline ? AppColors.primary : AppColors.errorSolid,
                 ),
