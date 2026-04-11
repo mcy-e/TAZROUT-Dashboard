@@ -253,6 +253,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Contact your administrator to verify your permissions settings if you cannot access certain controls.';
 
   @override
+  String get faqOfflineDetailed =>
+      'Check that all zone controllers are powered on and connected to the main gateway. Verify the network router is active and the gateway LED is green. If the issue persists, restart the gateway and wait 60 seconds before checking again.';
+
+  @override
+  String get faqErraticDetailed =>
+      'Sensor drift may be caused by physical damage, moisture ingress, or calibration loss. Navigate to the Zones tab, select the affected zone, and run a diagnostic. Replace the sensor if readings remain inconsistent after calibration.';
+
+  @override
+  String get faqSyncDetailed =>
+      'Verify your internet connection is active. The system caches data locally and will sync automatically once connection is restored. If syncing does not resume within 5 minutes of reconnecting, restart the dashboard application.';
+
+  @override
+  String get faqAccessDetailed =>
+      'Your account may lack the required permissions for this action. Contact your system administrator to review and update your access rights. Do not attempt to bypass access controls.';
+
+  @override
   String get aiLatestDecisionTitle => 'AI Latest Decision';
 
   @override

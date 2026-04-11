@@ -556,6 +556,30 @@ abstract class AppLocalizations {
   /// **'Contact your administrator to verify your permissions settings if you cannot access certain controls.'**
   String get faqAccessDesc;
 
+  /// No description provided for @faqOfflineDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that all zone controllers are powered on and connected to the main gateway. Verify the network router is active and the gateway LED is green. If the issue persists, restart the gateway and wait 60 seconds before checking again.'**
+  String get faqOfflineDetailed;
+
+  /// No description provided for @faqErraticDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor drift may be caused by physical damage, moisture ingress, or calibration loss. Navigate to the Zones tab, select the affected zone, and run a diagnostic. Replace the sensor if readings remain inconsistent after calibration.'**
+  String get faqErraticDetailed;
+
+  /// No description provided for @faqSyncDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your internet connection is active. The system caches data locally and will sync automatically once connection is restored. If syncing does not resume within 5 minutes of reconnecting, restart the dashboard application.'**
+  String get faqSyncDetailed;
+
+  /// No description provided for @faqAccessDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account may lack the required permissions for this action. Contact your system administrator to review and update your access rights. Do not attempt to bypass access controls.'**
+  String get faqAccessDetailed;
+
   /// No description provided for @aiLatestDecisionTitle.
   ///
   /// In en, this message translates to:

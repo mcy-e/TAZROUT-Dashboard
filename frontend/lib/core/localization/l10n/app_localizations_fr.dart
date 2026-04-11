@@ -257,6 +257,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Contactez votre administrateur pour vérifier vos droits si vous ne pouvez pas accéder à certaines commandes.';
 
   @override
+  String get faqOfflineDetailed =>
+      'Vérifiez que tous les contrôleurs de zone sont sous tension et connectés à la passerelle principale. Vérifiez que le routeur réseau est actif et que le voyant de la passerelle est vert. Si le problème persiste, redémarrez la passerelle et attendez 60 secondes avant de vérifier à nouveau.';
+
+  @override
+  String get faqErraticDetailed =>
+      'La dérive du capteur peut être causée par des dommages physiques, une infiltration d humidité ou une perte d étalonnage. Accédez à l onglet Zones, sélectionnez la zone concernée et lancez un diagnostic. Remplacez le capteur si les lectures restent incohérentes après l étalonnage.';
+
+  @override
+  String get faqSyncDetailed =>
+      'Vérifiez que votre connexion Internet est active. Le système met les données en cache localement et se synchronisera automatiquement une fois la connexion rétablie. Si la synchronisation ne reprend pas dans les 5 minutes suivant la reconnexion, redémarrez l application du tableau de bord.';
+
+  @override
+  String get faqAccessDetailed =>
+      'Votre compte peut ne pas avoir les autorisations requises pour cette action. Contactez votre administrateur système pour vérifier et mettre à jour vos droits d accès. N essayez pas de contourner les contrôles d accès.';
+
+  @override
   String get aiLatestDecisionTitle => 'Dernière décision IA';
 
   @override
