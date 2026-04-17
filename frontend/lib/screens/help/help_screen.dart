@@ -51,16 +51,19 @@ class HelpScreen extends StatelessWidget {
             const SizedBox(height: 24),
             //* FaqGrid (2x2 grid of issue cards)
             const FaqGrid(),
-            const SizedBox(height: 24),
-            //* SupportBanner (full width dark green banner)
-            SupportBanner(
-              onGetSupport: () => showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (_) => const Dialog(
-                  backgroundColor: Colors.transparent,
-                  insetPadding: EdgeInsets.symmetric(horizontal: 24),
-                  child: QrContactCard(),
+            const SizedBox(height: 148),
+            //* SupportBanner (narrower with horizontal breathing room)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: SupportBanner(
+                onGetSupport: () => showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => const Dialog(
+                    backgroundColor: Colors.transparent,
+                    insetPadding: EdgeInsets.symmetric(horizontal: 24),
+                    child: QrContactCard(),
+                  ),
                 ),
               ),
             ),

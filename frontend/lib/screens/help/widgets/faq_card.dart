@@ -6,99 +6,225 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/utils/locale_text_direction.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
+import '../../../../providers/preferences_provider.dart';
 
 //& FaqCard Widget
-class FaqCard extends StatefulWidget {
-  final IconData icon;
+class FaqCard extends ConsumerStatefulWidget {
+  final String iconAsset;
+  final Color iconColor;
   final String title;
   final String description;
+  final String detailedText;
 
   //* FaqCard Parameters
   const FaqCard({
     super.key,
-    required this.icon,
+    required this.iconAsset,
+    required this.iconColor,
     required this.title,
     required this.description,
+    required this.detailedText,
   });
 
   @override
-  State<FaqCard> createState() => _FaqCardState();
+  ConsumerState<FaqCard> createState() => _FaqCardState();
 }
 
-class _FaqCardState extends State<FaqCard> {
+class _FaqCardState extends ConsumerState<FaqCard> {
   bool _isHovered = false;
+
+  void _showDetailsDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: widget.iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  widget.iconAsset,
+                  width: 20,
+                  height: 20,
+                  colorFilter: ColorFilter.mode(widget.iconColor, BlendMode.srcIn),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                widget.title,
+                style: AppTypography.headingS.copyWith(
+                  color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          widget.detailedText,
+          style: AppTypography.bodySRegular.copyWith(
+            color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              l10n.ok,
+              style: AppTypography.bodySMedium.copyWith(color: AppColors.primary),
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final animDuration = ref.watch(preferencesProvider).animDuration;
 
     //* MouseRegion + InkWell dual input
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: InkWell(
-        onTap: () {}, //* FAQ cards are informational for now
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(16),
-          //* Minimum 48px tap target for touch screen compatibility
-          constraints: const BoxConstraints(minHeight: 100),
-          decoration: BoxDecoration(
-            //* Default bg: AppColors.darkPanelCard (dark) / AppColors.lightSurfaceCard (light)
-            //* Hover bg:   AppColors.darkHoverSurface (dark) / AppColors.lightElevatedCard (light)
-            color: _isHovered
-                ? (isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard)
-                : (isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard),
-            //* border: 1px AppColors.darkStrokeDivider default, 1px AppColors.primary on hover
-            border: Border.all(
-              color: _isHovered ? AppColors.primary : AppColors.darkStrokeDivider,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        onTap: _showDetailsDialog,
+        borderRadius: BorderRadius.circular(12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
             children: [
-              //* Container 36x36 borderRadius 8px
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  //* bg: AppColors.darkElevatedCard (dark) / AppColors.lightElevatedCard (light)
-                  color: isDark ? AppColors.darkElevatedCard : AppColors.lightElevatedCard,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  widget.icon,
-                  size: 18,
-                  color: AppColors.darkMutedText,
+              //* 1 Card background
+              Positioned.fill(
+                child: AnimatedContainer(
+                  duration: animDuration,
+                  decoration: BoxDecoration(
+                    color: _isHovered
+                        ? (isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard)
+                        : (isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard),
+                    border: Border.all(
+                      color: _isHovered ? AppColors.primary : (isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
-              //* Expanded Column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    //* Text(title) AppTypography.bodySBold
-                    Text(
-                      widget.title,
-                      textDirection: textDirectionForUiLocale(context),
-                      style: AppTypography.bodySBold.copyWith(
-                        color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+              //* 2 Top pattern strip (BEHIND content)
+              Positioned(
+                top: 0, left: 0, right: 0,
+                child: ClipRect(
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 0.0 : 1.0,
+                    duration: animDuration,
+                    curve: Curves.easeInOut,
+                    child: Transform.rotate(
+                      angle: 0,
+                      child: SvgPicture.asset(
+                        AppAssets.patternTriangleWave,
+                        height: 24,
+                        fit: BoxFit.fitWidth,
+                        colorFilter: ColorFilter.mode(
+                          isDark
+                              ? AppColors.darkMutedText.withValues(alpha: 0.08)
+                              : AppColors.lightStrokeDivider.withValues(alpha: 0.35),
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    //* Text(description) AppTypography.bodySRegular muted
-                    Text(
-                      widget.description,
-                      textDirection: textDirectionForUiLocale(context),
-                      style: AppTypography.bodySRegular.copyWith(
-                        color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                  ),
+                ),
+              ),
+              //* 3 Bottom pattern strip (BEHIND content)
+              Positioned(
+                bottom: 0, left: 0, right: 0,
+                child: ClipRect(
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 0.0 : 1.0,
+                    duration: animDuration,
+                    curve: Curves.easeInOut,
+                    child: Transform.rotate(
+                      angle: 0,
+                      child: SvgPicture.asset(
+                        AppAssets.patternTriangleWave,
+                        height: 24,
+                        fit: BoxFit.fitWidth,
+                        colorFilter: ColorFilter.mode(
+                          isDark
+                              ? AppColors.darkMutedText.withValues(alpha: 0.08)
+                              : AppColors.lightStrokeDivider.withValues(alpha: 0.35),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              //* 4 Content (ALWAYS ON TOP — last child)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 32, 16, 32),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    //* Icon box — same row as title
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: widget.iconColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          widget.iconAsset,
+                          width: 20,
+                          height: 20,
+                          colorFilter: ColorFilter.mode(widget.iconColor, BlendMode.srcIn),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.title,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.bodySMedium.copyWith(
+                              color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.description,
+                            textDirection: textDirectionForUiLocale(context),
+                            style: AppTypography.bodySRegular.copyWith(
+                              color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
