@@ -10,24 +10,26 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/locale_text_direction.dart';
+import '../../../../providers/navigation_provider.dart';
+import '../../../../providers/system_provider.dart';
 
 //& EmergencyStopButton Widget
-class EmergencyStopButton extends StatefulWidget {
-  //* StatefulWidget — tracks hover and loading state
+class EmergencyStopButton extends ConsumerStatefulWidget {
+  //* ConsumerStatefulWidget — tracks hover and loading state
   const EmergencyStopButton({super.key});
 
   @override
-  State<EmergencyStopButton> createState() => _EmergencyStopButtonState();
+  ConsumerState<EmergencyStopButton> createState() => _EmergencyStopButtonState();
 }
 
-class _EmergencyStopButtonState extends State<EmergencyStopButton> {
+class _EmergencyStopButtonState extends ConsumerState<EmergencyStopButton> {
   bool _isHovered = false;
 
   @override
@@ -162,12 +164,18 @@ class _EmergencyStopButtonState extends State<EmergencyStopButton> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              AppLogger.critical('EMERGENCY', 'Emergency stop triggered by user');
-              // TODO :: Publish stop signal to MQTT topic: tazrout/emergency/stop
-              // TODO :: Set hasEmergencyAlertProvider to true locally
-              // TODO :: Wire emergency stop to MQTT when backend endpoint is live
-              Navigator.pop(dialogContext);
+            onPressed: () async {
+              try {
+                //* Fire instant stop signal via SystemRepository
+                await ref.read(systemControlsProvider).emergencyStop();
+                
+                //* Set local alert state to true
+                ref.read(hasEmergencyAlertProvider.notifier).state = true;
+                
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              } catch (e) {
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorSolid,

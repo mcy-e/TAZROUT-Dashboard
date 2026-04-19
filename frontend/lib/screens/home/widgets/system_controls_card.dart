@@ -13,10 +13,11 @@ import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/app_logger.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../models/notification_model.dart';
 import '../../../providers/notification_provider.dart';
+import '../../../providers/navigation_provider.dart';
+import '../../../providers/system_provider.dart';
 
 //& SystemControlsCard
 class SystemControlsCard extends ConsumerWidget {
@@ -117,7 +118,7 @@ class SystemControlsCard extends ConsumerWidget {
             //* Two full-width outlined buttons stacked vertically with 12px gap
             //* REBOOT button
             _AnimatedRebootButton(
-              onConfirmRequested: () => _showConfirmDialog(context, _SystemAction.reboot),
+              onConfirmRequested: () => _showConfirmDialog(context, ref, _SystemAction.reboot),
             ),
             const SizedBox(height: 12),
             //* SHUT DOWN button
@@ -129,7 +130,7 @@ class SystemControlsCard extends ConsumerWidget {
               hoverDarkIcon: AppAssets.darkIconShutDownH,
               hoverLightIcon: AppAssets.lightIconShutDownH,
               hoverColor: AppColors.errorSolid,
-              onPressed: () => _showConfirmDialog(context, _SystemAction.shutdown),
+              onPressed: () => _showConfirmDialog(context, ref, _SystemAction.shutdown),
             ),
           ],
         ),
@@ -138,7 +139,7 @@ class SystemControlsCard extends ConsumerWidget {
   }
 
   //* On tap: show confirmation AlertDialog before logging the action
-  Future<bool> _showConfirmDialog(BuildContext context, _SystemAction action) async {
+  Future<bool> _showConfirmDialog(BuildContext context, WidgetRef ref, _SystemAction action) async {
     final l10n = AppLocalizations.of(context)!;
     final body = action == _SystemAction.reboot ? l10n.confirmRebootBody : l10n.confirmShutdownBody;
     final result = await showDialog<bool>(
@@ -166,11 +167,20 @@ class SystemControlsCard extends ConsumerWidget {
           ),
           //* Minimum 48px tap target for touch screen compatibility
           TextButton(
-            onPressed: () {
-              //* Log the action
-              final actionLabel = action == _SystemAction.reboot ? l10n.reboot : l10n.shutdown;
-              AppLogger.info('SYSTEM', 'User triggered $actionLabel');
-              Navigator.pop(context, true);
+            onPressed: () async {
+              try {
+                //* Trigger the selected system action
+                if (action == _SystemAction.reboot) {
+                  await ref.read(systemControlsProvider).rebootSystem();
+                  //* Reset emergency alert state on full system reboot
+                  ref.read(hasEmergencyAlertProvider.notifier).state = false;
+                } else {
+                  await ref.read(systemControlsProvider).shutdownSystem();
+                }
+                if (context.mounted) Navigator.pop(context, true);
+              } catch (e) {
+                if (context.mounted) Navigator.pop(context, false);
+              }
             },
             style: TextButton.styleFrom(
               minimumSize: const Size(48, 48),

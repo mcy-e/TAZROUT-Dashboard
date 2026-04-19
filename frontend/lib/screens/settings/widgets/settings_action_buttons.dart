@@ -46,40 +46,47 @@ class SettingsActionButtons extends ConsumerWidget {
   }
 }
 
+//& SettingsConfirmType Enum
+enum SettingsConfirmType { reset, apply }
+
 //& _showSettingsConfirmDialog
 void _showSettingsConfirmDialog(
   BuildContext context,
-  String message,
-  AppLocalizations l10n,
-  bool isDark,
+  SettingsConfirmType type,
 ) {
   showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(
-        message,
-        textDirection: textDirectionForUiLocale(ctx),
-        style: AppTypography.headingXS.copyWith(
-          color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+    builder: (ctx) {
+      final isDark = Theme.of(ctx).brightness == Brightness.dark;
+      final l10n = AppLocalizations.of(ctx)!;
+      final message = type == SettingsConfirmType.reset ? l10n.settingsReset : l10n.settingsApplied;
+
+      return AlertDialog(
+        backgroundColor: isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          message,
+          textDirection: textDirectionForUiLocale(ctx),
+          style: AppTypography.headingXS.copyWith(
+            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+          ),
+          textAlign: TextAlign.center,
         ),
-        textAlign: TextAlign.center,
-      ),
-      actionsAlignment: MainAxisAlignment.center,
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(
-            l10n.ok,
-            textDirection: textDirectionForUiLocale(ctx),
-            style: AppTypography.bodySMedium.copyWith(
-              color: AppColors.primary,
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              l10n.ok,
+              textDirection: textDirectionForUiLocale(ctx),
+              style: AppTypography.bodySMedium.copyWith(
+                color: AppColors.primary,
+              ),
             ),
           ),
-        ),
-      ],
-    ),
+        ],
+      );
+    },
   );
 }
 
@@ -113,14 +120,12 @@ class _ResetDefaultButtonState extends ConsumerState<_ResetDefaultButton> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: () {
+          onTap: () async {
             widget.onPressed();
-            _showSettingsConfirmDialog(
-              context,
-              l10n.settingsReset,
-              l10n,
-              Theme.of(context).brightness == Brightness.dark,
-            );
+            await Future.delayed(const Duration(milliseconds: 150));
+            if (context.mounted) {
+              _showSettingsConfirmDialog(context, SettingsConfirmType.reset);
+            }
           },
           child: SizedBox(
             height: 48,
@@ -183,7 +188,6 @@ class _ApplySettingsButtonState extends ConsumerState<_ApplySettingsButton> {
     final l10n = AppLocalizations.of(context)!;
     final animDuration = ref.watch(preferencesProvider).animDuration;
     final bgColor = _isHovered ? AppColors.primaryDark : AppColors.primary;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 120, minHeight: 48),
@@ -191,14 +195,12 @@ class _ApplySettingsButtonState extends ConsumerState<_ApplySettingsButton> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: () {
+          onTap: () async {
             widget.onPressed();
-            _showSettingsConfirmDialog(
-              context,
-              l10n.settingsApplied,
-              l10n,
-              isDark,
-            );
+            await Future.delayed(const Duration(milliseconds: 150));
+            if (context.mounted) {
+              _showSettingsConfirmDialog(context, SettingsConfirmType.apply);
+            }
           },
           child: SizedBox(
             height: 48,
