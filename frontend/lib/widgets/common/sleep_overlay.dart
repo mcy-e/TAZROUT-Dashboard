@@ -36,7 +36,7 @@ class SleepOverlay extends ConsumerWidget {
           _wakeUp(ref);
         },
         child: TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 800),
+          duration: const Duration(milliseconds: 4000),
           tween: Tween<double>(begin: 0.0, end: 0.92),
           builder: (context, opacity, child) {
             return Opacity(
@@ -99,6 +99,8 @@ class _PulsingLogoState extends State<_PulsingLogo> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -108,8 +110,8 @@ class _PulsingLogoState extends State<_PulsingLogo> with SingleTickerProviderSta
         );
       },
       child: SvgPicture.asset(
-        AppAssets.logoDarkIconDefault,
-        height: 80,
+        isDark ? AppAssets.logoDarkIconDefault : AppAssets.logoLightIconDefault,
+        height: 200,
       ),
     );
   }
