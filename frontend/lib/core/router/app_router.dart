@@ -1,6 +1,8 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/preferences_provider.dart';
 import '../../widgets/common/app_sidebar.dart';
 import '../../widgets/common/notification_overlay.dart';
 import '../../widgets/common/activity_detector.dart';
@@ -18,6 +20,41 @@ class AppRouter {
   //? Global navigator key for referencing the navigator
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
+  //* Helper to build transition pages respecting Power Saving Mode
+  static CustomTransitionPage _buildPageWithTransition(
+      BuildContext context, GoRouterState state, Widget child) {
+    return CustomTransitionPage(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return Consumer(
+          builder: (context, ref, childWidget) {
+            final animDuration = ref.watch(preferencesProvider).animDuration;
+            if (animDuration == Duration.zero) return childWidget!; // Power saving instant snap
+
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.96, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+                child: ColoredBox(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: childWidget,
+                ),
+              ),
+            );
+          },
+          child: child,
+        );
+      },
+    );
+  }
 
   //* Router configuration
   static final router = GoRouter(
@@ -51,31 +88,31 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => const HomeScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const HomeScreen()),
           ),
           GoRoute(
             path: '/zones',
-            builder: (context, state) => const ZonesScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const ZonesScreen()),
           ),
           GoRoute(
             path: '/analytics',
-            builder: (context, state) => const AnalyticsScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const AnalyticsScreen()),
           ),
           GoRoute(
             path: '/emergency',
-            builder: (context, state) => const EmergencyScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const EmergencyScreen()),
           ),
           GoRoute(
             path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const SettingsScreen()),
           ),
           GoRoute(
             path: '/help',
-            builder: (context, state) => const HelpScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const HelpScreen()),
           ),
           GoRoute(
             path: '/manual',
-            builder: (context, state) => const UserManualScreen(),
+            pageBuilder: (context, state) => _buildPageWithTransition(context, state, const UserManualScreen()),
           ),
         ],
       ),
