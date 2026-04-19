@@ -24,6 +24,7 @@ dependencies:
   flutter_svg: ^2.2.4
   shared_preferences: ^2.5.5
   ffi: ^2.1.3
+  syncfusion_flutter_pdfviewer: ^33.1.49
 
 #& Development Dependencies
 dev_dependencies:
@@ -56,4 +57,5 @@ flutter:
       - assets/images/nav_hover/
       - assets/images/show_satas_nav/
       - assets/sounds/
+      - assets/docs/user-manuals/
       - .env

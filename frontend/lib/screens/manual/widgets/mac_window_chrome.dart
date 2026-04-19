@@ -10,11 +10,15 @@ import '../../../../core/theme/app_typography.dart';
 //& MacWindowChrome Widget
 class MacWindowChrome extends StatelessWidget {
   final String fileName;
+  final String? selectedLanguage;
+  final ValueChanged<String?>? onLanguageChanged;
 
   //* Provides macOS style chrome for document containers
   const MacWindowChrome({
     super.key,
     required this.fileName,
+    this.selectedLanguage,
+    this.onLanguageChanged,
   });
 
   @override
@@ -34,32 +38,64 @@ class MacWindowChrome extends StatelessWidget {
           topRight: Radius.circular(12),
         ),
       ),
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          const SizedBox(width: 16),
-          //* Traffic light dots
-          Row(
-            children: const [
-              _Dot(color: Color(0xFFFF5F57)), // red
-              SizedBox(width: 6),
-              _Dot(color: Color(0xFFFFBD2E)), // amber
-              SizedBox(width: 6),
-              _Dot(color: Color(0xFF28C840)), // green
-            ],
-          ),
           //* Filename tab centered in the bar
-          Expanded(
-            child: Center(
-              child: Text(
-                fileName,
-                style: AppTypography.captionMedium.copyWith(
-                  color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+          Text(
+            fileName,
+            style: AppTypography.captionMedium.copyWith(
+              color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+            ),
+          ),
+          //* Traffic light dots on the left
+          Positioned(
+            left: 16,
+            child: Row(
+              children: const [
+                _Dot(color: Color(0xFFFF5F57)), // red
+                SizedBox(width: 6),
+                _Dot(color: Color(0xFFFFBD2E)), // amber
+                SizedBox(width: 6),
+                _Dot(color: Color(0xFF28C840)), // green
+              ],
+            ),
+          ),
+          if (selectedLanguage != null && onLanguageChanged != null)
+            Positioned(
+              right: 16,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedLanguage,
+                    focusColor: Colors.transparent,
+                    icon: Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Icon(
+                        Icons.language,
+                        size: 16,
+                        color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                      ),
+                    ),
+                    dropdownColor: isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard,
+                    style: AppTypography.captionMedium.copyWith(
+                      color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                    ),
+                    onChanged: onLanguageChanged,
+                    items: const [
+                      DropdownMenuItem(value: 'en', child: Text('EN')),
+                      DropdownMenuItem(value: 'fr', child: Text('FR')),
+                      DropdownMenuItem(value: 'ar', child: Text('AR')),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          //* Balancing spacer for the leading dots
-          const SizedBox(width: 52),
         ],
       ),
     );

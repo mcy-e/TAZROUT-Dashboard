@@ -7,6 +7,8 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -16,14 +18,63 @@ import '../../../../core/constants/app_assets.dart';
 import 'mac_window_chrome.dart';
 
 //& DocumentViewerCard Widget
-class DocumentViewerCard extends StatelessWidget {
+class DocumentViewerCard extends StatefulWidget {
   //* Card borderRadius 12px, no padding on outer card
   const DocumentViewerCard({super.key});
+
+  @override
+  State<DocumentViewerCard> createState() => _DocumentViewerCardState();
+}
+
+class _DocumentViewerCardState extends State<DocumentViewerCard> {
+  final PdfViewerController _pdfViewerController = PdfViewerController();
+  String _selectedLanguage = 'en';
+  bool _isLoading = false;
+  bool _assetExists = false;
+  bool _hasLoadError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPdfExists();
+  }
+
+  @override
+  void dispose() {
+    _pdfViewerController.dispose();
+    super.dispose();
+  }
+
+  void _onLanguageChanged(String? newLang) {
+    if (newLang != null && newLang != _selectedLanguage) {
+      setState(() {
+        _selectedLanguage = newLang;
+        _hasLoadError = false;
+        _checkPdfExists();
+      });
+    }
+  }
+
+  Future<void> _checkPdfExists() async {
+    setState(() => _isLoading = true);
+    
+    final path = 'assets/docs/user-manuals/manual_$_selectedLanguage.pdf';
+    try {
+      await rootBundle.load(path);
+      if (mounted) setState(() => _assetExists = true);
+    } catch (_) {
+      if (mounted) setState(() => _assetExists = false);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+
+    final bool showPlaceholder = !_assetExists || _hasLoadError;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -37,9 +88,57 @@ class DocumentViewerCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          MacWindowChrome(fileName: l10n.manualPdfFileName),
+          MacWindowChrome(
+            fileName: l10n.manualPdfFileName,
+            selectedLanguage: _selectedLanguage,
+            onLanguageChanged: _onLanguageChanged,
+          ),
           Expanded(
-            child: _EmptyStatePlaceholder(),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : (showPlaceholder
+                    ? _EmptyStatePlaceholder()
+                    : Stack(
+                        children: [
+                          SfPdfViewer.asset(
+                            'assets/docs/user-manuals/manual_$_selectedLanguage.pdf',
+                            controller: _pdfViewerController,
+                            canShowScrollHead: false,
+                            canShowScrollStatus: false,
+                            onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
+                              if (mounted) {
+                                setState(() {
+                                  _hasLoadError = true;
+                                });
+                              }
+                            },
+                          ),
+                          //* Zoom controls overlay
+                          Positioned(
+                            bottom: 16,
+                            right: 16,
+                            child: Row(
+                              children: [
+                                _ZoomButton(
+                                  icon: Icons.zoom_out,
+                                  onPressed: () {
+                                    _pdfViewerController.zoomLevel =
+                                        (_pdfViewerController.zoomLevel - 0.25).clamp(1.0, 3.0);
+                                  },
+                                ),
+                                const SizedBox(width: 8),
+                                _ZoomButton(
+                                  icon: Icons.zoom_in,
+                                  onPressed: () {
+                                    _pdfViewerController.zoomLevel =
+                                        (_pdfViewerController.zoomLevel + 0.25).clamp(1.0, 3.0);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )),
           ),
           Divider(
             color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
@@ -159,6 +258,43 @@ class _EmptyStatePlaceholderState extends State<_EmptyStatePlaceholder> {
               child: IgnorePointer(child: _buildTealDiamond(-0.25)),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+//& _ZoomButton Widget
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _ZoomButton({required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Material(
+      color: isDark ? AppColors.darkElevatedCard : AppColors.lightSurfaceCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider,
+        ),
+      ),
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onPressed,
+        hoverColor: isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+          ),
         ),
       ),
     );
