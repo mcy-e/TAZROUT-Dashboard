@@ -11,6 +11,7 @@ import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_text_direction.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 
 //& WaterUsageCard Widget
 class WaterUsageCard extends StatefulWidget {
@@ -54,9 +55,9 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final data = _periodData[_selectedPeriod]!;
+    final data = _periodData[_selectedPeriod] ?? [];
     final labels = _labelsForPeriod(context, _selectedPeriod);
-    final maxY = data.reduce((a, b) => a > b ? a : b) * 1.2;
+    final maxY = data.isEmpty ? 10.0 : data.reduce((a, b) => a > b ? a : b) * 1.2;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -93,62 +94,64 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
             const SizedBox(height: 16),
             //* Bar Chart area
             Expanded(
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxY,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) => isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard,
-                      tooltipRoundedRadius: 4,
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        return BarTooltipItem(
-                          l10n.waterUsageTooltipLiters(rod.toY.round().toString()),
-                          AppTypography.captionMedium.copyWith(
-                            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final index = value.toInt();
-                          if (index >= 0 && index < labels.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                labels[index],
-                                textDirection: textDirectionForUiLocale(context),
-                                style: AppTypography.overlineXS.copyWith(
-                                  color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+              child: data.isEmpty
+                  ? EmptyStateWidget(message: l10n.emptyStateNoData)
+                  : BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: maxY,
+                        barTouchData: BarTouchData(
+                          enabled: true,
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipColor: (_) => isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard,
+                            tooltipRoundedRadius: 4,
+                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              return BarTooltipItem(
+                                l10n.waterUsageTooltipLiters(rod.toY.round().toString()),
+                                AppTypography.captionMedium.copyWith(
+                                  color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                                 ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                        reservedSize: 28,
+                              );
+                            },
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final index = value.toInt();
+                                if (index >= 0 && index < labels.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      labels[index],
+                                      textDirection: textDirectionForUiLocale(context),
+                                      style: AppTypography.overlineXS.copyWith(
+                                        color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                              reservedSize: 28,
+                            ),
+                          ),
+                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(show: false),
+                        barGroups: [
+                          //* Period-driven static data (5 bars per period)
+                          // TODO :: Replace with real MQTT data from topic: tazrout/analytics/water-usage
+                          for (int i = 0; i < data.length; i++) _buildBarGroup(i, data[i]),
+                        ],
                       ),
                     ),
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: [
-                    //* Period-driven static data (5 bars per period)
-                    // TODO :: Replace with real MQTT data from topic: tazrout/analytics/water-usage
-                    for (int i = 0; i < data.length; i++) _buildBarGroup(i, data[i]),
-                  ],
-                ),
-              ),
             ),
           ],
         ),

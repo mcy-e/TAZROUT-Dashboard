@@ -10,6 +10,7 @@ import '../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../models/zone_model.dart';
 import 'widgets/zone_card.dart';
+import '../../widgets/common/empty_state_widget.dart';
 
 //& ZonesScreen Widget
 class ZonesScreen extends StatelessWidget {
@@ -123,16 +124,24 @@ class ZonesScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: zones.map((zone) {
-                    return SizedBox(
-                      width: cardWidth,
-                      child: ZoneCard(zone: zone),
-                    );
-                  }).toList(),
-                ),
+                if (zones.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 40),
+                      child: EmptyStateWidget(message: l10n.emptyStateNoData),
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: zones.map((zone) {
+                      return SizedBox(
+                        width: cardWidth,
+                        child: ZoneCard(zone: zone),
+                      );
+                    }).toList(),
+                  ),
               ],
             ),
           );

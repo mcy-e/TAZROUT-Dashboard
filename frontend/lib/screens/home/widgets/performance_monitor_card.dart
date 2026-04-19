@@ -14,6 +14,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../../widgets/common/empty_state_widget.dart';
 
 //& PerformanceMonitorCard
 class PerformanceMonitorCard extends StatelessWidget {
@@ -24,6 +25,14 @@ class PerformanceMonitorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+
+    // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
+    final Map<String, String> data = {
+      'water': '42%',
+      'soil': '620 g/kg',
+      'temp': '24°C',
+      'humidity': '45%',
+    };
 
     return Card(
       margin: EdgeInsets.zero,
@@ -98,88 +107,81 @@ class PerformanceMonitorCard extends StatelessWidget {
                     ],
             ),
             const SizedBox(height: 16),
-            //* Replace GridView.count with a Column of two Rows
-            //* Each row is Expanded, each cell is Expanded
+            //* Content Area
             Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Row(
+              child: data.isEmpty
+                  ? EmptyStateWidget(message: l10n.emptyStateNoData)
+                  : Column(
                       children: [
-                        //* 1. Water Output
                         Expanded(
-                          child: _MetricSubCard(
-                            // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: l10n.waterOutput,
-                            // TODO :: Wire live values to MQTT SENSOR_UPDATE events
-                            value: '42%',
-                            accentColor: AppColors.primary,
-                            darkIcon: AppAssets.darkIconWaterI,
-                            lightIcon: AppAssets.lightIconWaterI,
-                            hoverDarkIcon: AppAssets.darkIconWaterH,
-                            hoverLightIcon: AppAssets.lightIconWaterH,
-                            chartColor: AppColors.series1Primary,
+                          child: Row(
+                            children: [
+                              //* 1. Water Output
+                              Expanded(
+                                child: _MetricSubCard(
+                                  label: l10n.waterOutput,
+                                  value: data['water'] ?? '',
+                                  accentColor: AppColors.primary,
+                                  darkIcon: AppAssets.darkIconWaterI,
+                                  lightIcon: AppAssets.lightIconWaterI,
+                                  hoverDarkIcon: AppAssets.darkIconWaterH,
+                                  hoverLightIcon: AppAssets.lightIconWaterH,
+                                  chartColor: AppColors.series1Primary,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              //* 2. Soil Moisture
+                              Expanded(
+                                child: _MetricSubCard(
+                                  label: l10n.soilMoisture,
+                                  value: data['soil'] ?? '',
+                                  accentColor: AppColors.series2Blue,
+                                  darkIcon: AppAssets.darkIconSoilIdle,
+                                  lightIcon: AppAssets.lightIconSoilIdle,
+                                  hoverDarkIcon: AppAssets.darkIconSoilH,
+                                  hoverLightIcon: AppAssets.lightIconSoilH,
+                                  chartColor: AppColors.series2Blue,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        //* 2. Soil Moisture
+                        const SizedBox(height: 12),
                         Expanded(
-                          child: _MetricSubCard(
-                            // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: l10n.soilMoisture,
-                            // TODO :: Wire live values to MQTT SENSOR_UPDATE events
-                            value: '620 g/kg',
-                            accentColor: AppColors.series2Blue,
-                            darkIcon: AppAssets.darkIconSoilIdle,
-                            lightIcon: AppAssets.lightIconSoilIdle,
-                            hoverDarkIcon: AppAssets.darkIconSoilH,
-                            hoverLightIcon: AppAssets.lightIconSoilH,
-                            chartColor: AppColors.series2Blue,
+                          child: Row(
+                            children: [
+                              //* 3. Temperature
+                              Expanded(
+                                child: _MetricSubCard(
+                                  label: l10n.temperature,
+                                  value: data['temp'] ?? '',
+                                  accentColor: AppColors.errorSolid,
+                                  darkIcon: AppAssets.darkIconTemperatureI,
+                                  lightIcon: AppAssets.lightIconTemperatureI,
+                                  hoverDarkIcon: AppAssets.darkIconTemperatureH,
+                                  hoverLightIcon: AppAssets.lightIconTemperatureH,
+                                  chartColor: AppColors.errorSolid,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              //* 4. Humidity
+                              Expanded(
+                                child: _MetricSubCard(
+                                  label: l10n.humidity,
+                                  value: data['humidity'] ?? '',
+                                  accentColor: AppColors.series3Amber,
+                                  darkIcon: AppAssets.darkIconHumidityI,
+                                  lightIcon: AppAssets.lightIconHumidityI,
+                                  hoverDarkIcon: AppAssets.darkIconHumidityH,
+                                  hoverLightIcon: AppAssets.lightIconHumidityH,
+                                  chartColor: AppColors.series3Amber,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        //* 3. Temperature
-                        Expanded(
-                          child: _MetricSubCard(
-                            // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: l10n.temperature,
-                            // TODO :: Wire live values to MQTT SENSOR_UPDATE events
-                            value: '24°C',
-                            accentColor: AppColors.errorSolid,
-                            darkIcon: AppAssets.darkIconTemperatureI,
-                            lightIcon: AppAssets.lightIconTemperatureI,
-                            hoverDarkIcon: AppAssets.darkIconTemperatureH,
-                            hoverLightIcon: AppAssets.lightIconTemperatureH,
-                            chartColor: AppColors.errorSolid,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        //* 4. Humidity
-                        Expanded(
-                          child: _MetricSubCard(
-                            // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-                            label: l10n.humidity,
-                            // TODO :: Wire live values to MQTT SENSOR_UPDATE events
-                            value: '45%',
-                            accentColor: AppColors.series3Amber,
-                            darkIcon: AppAssets.darkIconHumidityI,
-                            lightIcon: AppAssets.lightIconHumidityI,
-                            hoverDarkIcon: AppAssets.darkIconHumidityH,
-                            hoverLightIcon: AppAssets.lightIconHumidityH,
-                            chartColor: AppColors.series3Amber,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
             //* No pattern — clean card only
           ],

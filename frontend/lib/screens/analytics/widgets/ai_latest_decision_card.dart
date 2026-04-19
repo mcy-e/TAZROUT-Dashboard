@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../providers/preferences_provider.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 
 //& AiLatestDecisionCard Widget
 class AiLatestDecisionCard extends ConsumerStatefulWidget {
@@ -229,17 +230,19 @@ class _AiLatestDecisionCardState extends ConsumerState<AiLatestDecisionCard> {
                                     : AppColors.lightStrokeDivider,
                               ),
                             ),
-                            child: Text(
-                              '"$decisionText"',
-                              textDirection: textDirectionForUiLocale(context),
-                              style: AppTypography.bodySRegular.copyWith(
-                                color: isDark
-                                    ? AppColors.darkBodyText
-                                    : AppColors.lightBodyText,
-                                fontStyle: FontStyle.italic,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: decisionText.isEmpty
+                                ? EmptyStateWidget(message: l10n.emptyStateNoData)
+                                : Text(
+                                    '"$decisionText"',
+                                    textDirection: textDirectionForUiLocale(context),
+                                    style: AppTypography.bodySRegular.copyWith(
+                                      color: isDark
+                                          ? AppColors.darkBodyText
+                                          : AppColors.lightBodyText,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                           ),
                         ),
                       ],

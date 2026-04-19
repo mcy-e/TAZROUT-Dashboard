@@ -6,28 +6,32 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../providers/navigation_provider.dart';
 import 'widgets/zone_status_grid.dart';
 import 'widgets/emergency_stop_button.dart';
 
 //& EmergencyScreen Widget
-class EmergencyScreen extends StatelessWidget {
-  //* StatelessWidget — composes the emergency control layout
+class EmergencyScreen extends ConsumerWidget {
+  //* ConsumerWidget — composes the emergency control layout
   const EmergencyScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final isEmergencyActive = ref.watch(hasEmergencyAlertProvider);
 
     //* Static list of 9 zones with mixed online/offline states
+    //* If emergency is active, all zones go offline (no reading)
     // TODO :: Replace with real MQTT data from topic: tazrout/emergency/status
-    final List<Map<String, dynamic>> zones = [
+    final List<Map<String, dynamic>> rawZones = [
       {'zoneName': 'Zone A', 'isOnline': true},
       {'zoneName': 'Zone B', 'isOnline': true},
       {'zoneName': 'Zone C', 'isOnline': true},
@@ -38,6 +42,10 @@ class EmergencyScreen extends StatelessWidget {
       {'zoneName': 'Zone H', 'isOnline': true},
       {'zoneName': 'Zone I', 'isOnline': true},
     ];
+
+    final List<Map<String, dynamic>> zones = isEmergencyActive
+        ? rawZones.map((z) => {...z, 'isOnline': false}).toList()
+        : rawZones;
 
     return Scaffold(
       backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),

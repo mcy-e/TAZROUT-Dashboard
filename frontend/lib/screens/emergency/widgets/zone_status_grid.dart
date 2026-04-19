@@ -5,6 +5,8 @@
 //& Imports
 import 'package:flutter/material.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/localization/l10n/app_localizations.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 import 'zone_status_card.dart';
 
 //& ZoneStatusGrid Widget
@@ -21,6 +23,13 @@ class ZoneStatusGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     //* AppLogger.debug('EMERGENCY', 'Rendering ${zones.length} zone cards')
     AppLogger.debug('EMERGENCY', 'Rendering ${zones.length} zone cards');
+
+    if (zones.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      return Center(
+        child: EmptyStateWidget(message: l10n.emptyStateNoData),
+      );
+    }
 
     //* GridView.builder
     return GridView.builder(

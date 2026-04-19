@@ -10,6 +10,7 @@ import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 
 //& ResourceConsumptionCard Widget
 class ResourceConsumptionCard extends StatefulWidget {
@@ -45,11 +46,13 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final zoneData = _periodData[_selectedPeriod]!;
-    final maxY = zoneData
+    final zoneData = _periodData[_selectedPeriod] ?? [];
+    final maxY = zoneData.isEmpty
+        ? 10.0
+        : zoneData
             .map((zone) => zone[0] + zone[1] + zone[2])
             .reduce((a, b) => a > b ? a : b) *
-        1.2;
+            1.2;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -120,61 +123,63 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
             const SizedBox(height: 16),
             //* Stacked Bar Chart
             Expanded(
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxY,
-                  barTouchData: BarTouchData(enabled: true),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          // DATA — zone names from MQTT
-                          const zones = ['Zone A', 'Zone B', 'Zone C'];
-                          final index = value.toInt();
-                          if (index >= 0 && index < zones.length) {
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Text(
-                                zones[index],
-                                textDirection: textDirectionForUiLocale(context),
-                                style: AppTypography.overlineXS.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkMutedText
-                                      : AppColors.lightMutedText,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                        reservedSize: 28,
+              child: zoneData.isEmpty
+                  ? EmptyStateWidget(message: l10n.emptyStateNoData)
+                  : BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: maxY,
+                        barTouchData: BarTouchData(enabled: true),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                // DATA — zone names from MQTT
+                                const zones = ['Zone A', 'Zone B', 'Zone C'];
+                                final index = value.toInt();
+                                if (index >= 0 && index < zones.length) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      zones[index],
+                                      textDirection: textDirectionForUiLocale(context),
+                                      style: AppTypography.overlineXS.copyWith(
+                                        color: isDark
+                                            ? AppColors.darkMutedText
+                                            : AppColors.lightMutedText,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                              reservedSize: 28,
+                            ),
+                          ),
+                          leftTitles:
+                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles:
+                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles:
+                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(show: false),
+                        barGroups: [
+                          //* Period-driven static data
+                          // TODO :: Replace with real MQTT data from topic: tazrout/analytics/consumption-by-zone
+                          for (int x = 0; x < zoneData.length; x++)
+                            _buildStackedBar(
+                              x,
+                              zoneData[x][0],
+                              zoneData[x][1],
+                              zoneData[x][2],
+                            ),
+                        ],
                       ),
                     ),
-                    leftTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: [
-                    //* Period-driven static data
-                    // TODO :: Replace with real MQTT data from topic: tazrout/analytics/consumption-by-zone
-                    for (int x = 0; x < zoneData.length; x++)
-                      _buildStackedBar(
-                        x,
-                        zoneData[x][0],
-                        zoneData[x][1],
-                        zoneData[x][2],
-                      ),
-                  ],
-                ),
-              ),
             ),
             const SizedBox(height: 8),
             //* Row Legend

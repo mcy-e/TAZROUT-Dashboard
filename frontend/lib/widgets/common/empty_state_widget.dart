@@ -22,7 +22,7 @@ class EmptyStateWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SvgPicture.asset(
-            AppAssets.symbolBalance,
+            isDark ? AppAssets.logoDarkIconDefault : AppAssets.logoLightIconDefault,
             height: 40,
             colorFilter: ColorFilter.mode(
               isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
