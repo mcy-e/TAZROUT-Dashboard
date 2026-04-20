@@ -11,86 +11,23 @@ import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../models/zone_model.dart';
 import 'widgets/zone_card.dart';
 import '../../widgets/common/empty_state_widget.dart';
+import '../../providers/zone_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 //& ZonesScreen Widget
-class ZonesScreen extends StatelessWidget {
-  //* StatelessWidget — composes the layout of the Zones screen
+class ZonesScreen extends ConsumerWidget {
+  //* ConsumerWidget — composes the layout of the Zones screen
   const ZonesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
-    //* Build a static list of 7 ZoneModel objects with varied states
+    //* Read zones from provider
     // TODO :: Replace with real MQTT data from topic: tazrout/zones
-    final List<ZoneModel> zones = [
-      const ZoneModel(
-        zoneId: 'A',
-        zoneName: 'Zone A',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 24,
-        moisture: 620,
-        waterLevel: 0.45,
-      ),
-      const ZoneModel(
-        zoneId: 'B',
-        zoneName: 'Zone B',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 22,
-        moisture: 580,
-        waterLevel: 0.38,
-      ),
-      const ZoneModel(
-        zoneId: 'C',
-        zoneName: 'Zone C',
-        isOnline: false,
-        isValveOpen: false,
-        temperature: 0,
-        moisture: 0,
-        waterLevel: 0,
-      ),
-      const ZoneModel(
-        zoneId: 'D',
-        zoneName: 'Zone D',
-        isOnline: true,
-        isValveOpen: false,
-        temperature: 26,
-        moisture: 700,
-        waterLevel: 0.52,
-      ),
-      const ZoneModel(
-        zoneId: 'E',
-        zoneName: 'Zone E',
-        isOnline: false,
-        isValveOpen: false,
-        temperature: 0,
-        moisture: 0,
-        waterLevel: 0,
-      ),
-      const ZoneModel(
-        zoneId: 'F',
-        zoneName: 'Zone F',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 21,
-        moisture: 610,
-        waterLevel: 0.41,
-      ),
-      const ZoneModel(
-        zoneId: 'G',
-        zoneName: 'Zone G',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 23,
-        moisture: 590,
-        waterLevel: 0.44,
-      ),
-    ];
+    final List<ZoneModel> zones = ref.watch(zonesProvider);
 
-    //* Layout: Padding(24) → GridView.builder
     return Scaffold(
       backgroundColor: AppColors.lightSurfaceCard.withValues(alpha: 0.0),
       body: LayoutBuilder(
