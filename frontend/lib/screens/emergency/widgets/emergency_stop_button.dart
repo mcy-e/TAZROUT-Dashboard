@@ -6,7 +6,8 @@
 //? Hover state: brighter red (AppColors.errorSolid) bg.
 //? The button has Amazigh zigzag strip pattern on left and right sides
 //? On confirm: sets hasEmergencyAlertProvider to true locally.
-// TODO :: Wire confirmed stop to local MQTT publish if needed
+// TODO :: Wire confirmed stop to MQTT publish (Topic: tazrout/system/emergency/stop)
+// TODO :: Payload: {"packet_type": "EMERGENCY_STOP", "issued_by": "DASHBOARD_USER", "timestamp": "..."}
 
 //& Imports
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_text_direction.dart';
 import '../../../../providers/navigation_provider.dart';
 import '../../../../providers/system_provider.dart';
+import '../../../../providers/zone_provider.dart';
 
 //& EmergencyStopButton Widget
 class EmergencyStopButton extends ConsumerStatefulWidget {
@@ -171,6 +173,9 @@ class _EmergencyStopButtonState extends ConsumerState<EmergencyStopButton> {
                 
                 //* Set local alert state to true
                 ref.read(hasEmergencyAlertProvider.notifier).state = true;
+                
+                //* Mark all zones offline in the UI
+                ref.read(zonesProvider.notifier).setAllZonesOffline();
                 
                 if (dialogContext.mounted) Navigator.pop(dialogContext);
               } catch (e) {

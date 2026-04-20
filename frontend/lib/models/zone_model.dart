@@ -22,4 +22,25 @@ class ZoneModel {
     required this.moisture,
     required this.waterLevel,
   });
+
+  //* copyWith method for state updates
+  ZoneModel copyWith({
+    String? zoneId,
+    String? zoneName,
+    bool? isOnline,
+    bool? isValveOpen,
+    double? temperature,
+    double? moisture,
+    double? waterLevel,
+  }) {
+    return ZoneModel(
+      zoneId: zoneId ?? this.zoneId,
+      zoneName: zoneName ?? this.zoneName,
+      isOnline: isOnline ?? this.isOnline,
+      isValveOpen: isValveOpen ?? this.isValveOpen,
+      temperature: temperature ?? this.temperature,
+      moisture: moisture ?? this.moisture,
+      waterLevel: waterLevel ?? this.waterLevel,
+    );
+  }
 }
