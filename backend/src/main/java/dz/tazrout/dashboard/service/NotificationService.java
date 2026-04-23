@@ -23,3 +23,50 @@
  * DEPENDENCIES: ZoneRepository, MqttPublisher
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import dz.tazrout.dashboard.mqtt.MqttPublisher;
+import dz.tazrout.dashboard.mqtt.MqttTopics;
+import java.time.Instant;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+
+@Service
+public class NotificationService {
+    private final MqttPublisher mqttPublisher;
+    private final ObjectMapper objectMapper;
+
+    public NotificationService(MqttPublisher mqttPublisher, ObjectMapper objectMapper) {
+        this.mqttPublisher = mqttPublisher;
+        this.objectMapper = objectMapper;
+    }
+
+    public void handleEmergencyAlert(JsonNode payload) {
+        mqttPublisher.publish(MqttTopics.SYSTEM_EMERGENCY_STATUS, payload.toString(), 1, true);
+        publishNotification("sensorAlert", "Emergency alert", payload.path("message").asText("Emergency reported"));
+    }
+
+    public void handleGatewaySignal(JsonNode payload) {
+        if ("OFFLINE".equalsIgnoreCase(payload.path("status").asText())) {
+            publishNotification("sensorAlert", "Gateway offline", "Gateway reported offline status");
+        }
+    }
+
+    public void handleSystemControl(String topic, JsonNode payload) {
+        String message = payload.path("command").asText("EMERGENCY_STOP");
+        publishNotification("aiDecision", "System control received", topic + ": " + message);
+    }
+
+    private void publishNotification(String type, String title, String message) {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("id", "NOTIF-" + UUID.randomUUID());
+        node.put("type", type);
+        node.put("title", title);
+        node.put("message", message);
+        node.put("timestamp", Instant.now().toString());
+        mqttPublisher.publish(MqttTopics.DASHBOARD_NOTIFICATIONS, node.toString(), 1, false);
+    }
+}

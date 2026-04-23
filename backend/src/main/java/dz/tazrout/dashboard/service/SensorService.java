@@ -19,3 +19,29 @@
  * DEPENDENCIES: SensorReadingRepository, ZoneRepository, MqttPublisher, NotificationService
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SensorService {
+    private final ZoneService zoneService;
+    private final Map<String, JsonNode> latestByZone = new ConcurrentHashMap<>();
+
+    public SensorService(ZoneService zoneService) {
+        this.zoneService = zoneService;
+    }
+
+    public void handleSensorReading(String topic, JsonNode payload) {
+        String zoneId = zoneService.extractZoneId(topic, payload);
+        latestByZone.put(zoneId, payload);
+        zoneService.updateZoneSnapshot(zoneId, payload);
+    }
+
+    public Map<String, JsonNode> getLatestByZone() {
+        return latestByZone;
+    }
+}

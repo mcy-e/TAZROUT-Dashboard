@@ -10,3 +10,27 @@
  * DEPENDENCIES: spring-integration-mqtt, application.properties (mqtt.broker.url, mqtt.client.id)
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.config;
+
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class MqttConfig {
+
+    @Bean
+    public MqttConnectOptions mqttConnectOptions(
+            @Value("${mqtt.broker.url:tcp://localhost:1883}") String brokerUrl,
+            @Value("${mqtt.connection.timeout:30}") int timeoutSeconds,
+            @Value("${mqtt.keep.alive.interval:60}") int keepAliveSeconds) {
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setServerURIs(new String[]{brokerUrl});
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(false);
+        options.setConnectionTimeout(timeoutSeconds);
+        options.setKeepAliveInterval(keepAliveSeconds);
+        return options;
+    }
+}
