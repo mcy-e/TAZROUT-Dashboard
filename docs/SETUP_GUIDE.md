@@ -106,6 +106,10 @@ Expected output:
 
 The broker is managed by Mr. Lhacani. Verify you can connect:
 
+**Auth consistency note (AI client):**
+- Keep Mosquitto ACL user and password-file user exactly the same: `ai_engine`
+- Do not mix `ai_engine` in ACL with `ai` in `password_file`, or AI MQTT authentication will fail
+
 ```bash
 # Test subscription (in one terminal)
 mosquitto_sub -h <BROKER_IP> -t "tazrout/#" -v

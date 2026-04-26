@@ -12,6 +12,7 @@
  */
 package dz.tazrout.dashboard.config;
 
+import org.springframework.util.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,8 @@ public class MqttConfig {
     @Bean
     public MqttConnectOptions mqttConnectOptions(
             @Value("${mqtt.broker.url:tcp://localhost:1883}") String brokerUrl,
+            @Value("${mqtt.username:}") String username,
+            @Value("${mqtt.password:}") String password,
             @Value("${mqtt.connection.timeout:30}") int timeoutSeconds,
             @Value("${mqtt.keep.alive.interval:60}") int keepAliveSeconds) {
         MqttConnectOptions options = new MqttConnectOptions();
@@ -31,6 +34,12 @@ public class MqttConfig {
         options.setCleanSession(false);
         options.setConnectionTimeout(timeoutSeconds);
         options.setKeepAliveInterval(keepAliveSeconds);
+        if (StringUtils.hasText(username)) {
+            options.setUserName(username);
+        }
+        if (StringUtils.hasText(password)) {
+            options.setPassword(password.toCharArray());
+        }
         return options;
     }
 }
