@@ -3,6 +3,7 @@
 
 
 #* Other files
+docs/PRESENTATION_GUIDE.md
 BACKEND_DATA_REQUIREMENTS.*
 docs/*.pdf
 .aider*
@@ -12,7 +13,8 @@ docs/*.pdf
 .metadata
 
 #* Folders
-
+backend/target/
+backend/tazrout-backend-*/
 frontend/build
 frontend/windows
 # Miscellaneous
