@@ -1,21 +1,33 @@
-/*
- * FILE: Zone.java
- * PURPOSE: JPA entity representing a physical agricultural zone with its
- *          current sensor readings and device state.
- *          Maps to the "zones" PostgreSQL table.
- *
- *          Fields:
- *            zone_id       VARCHAR(20)   PK   — e.g. "zone_a"
- *            zone_name     VARCHAR(50)        — e.g. "Zone A"
- *            device_state  VARCHAR(10)        — ONLINE | OFFLINE
- *            valve_state   VARCHAR(10)        — OPEN | CLOSED
- *            temperature   DOUBLE             — °C (-50 to 60)
- *            moisture      DOUBLE             — g/m³ (0 to 2000)
- *            water_level   DOUBLE             — % (0 to 100)
- *            last_updated  TIMESTAMP          — ISO 8601 UTC
- *
- * MQTT TOPICS: N/A (data layer — consumed by ZoneService)
- * DATABASE: zones
- * DEPENDENCIES: Jakarta Persistence (JPA annotations)
- * IMPLEMENTED BY: Mr. Fehis
- */
+package dz.tazrout.dashboard.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "zones")
+public class Zone {
+    @Id
+    private String zoneId;
+    private String zoneName;
+    private String deviceState;
+    private String valveState;
+    private Double temperature;
+    private Double moisture;
+    private Double waterLevel;
+
+    public String getZoneId() { return zoneId; }
+    public void setZoneId(String zoneId) { this.zoneId = zoneId; }
+    public String getZoneName() { return zoneName; }
+    public void setZoneName(String zoneName) { this.zoneName = zoneName; }
+    public String getDeviceState() { return deviceState; }
+    public void setDeviceState(String deviceState) { this.deviceState = deviceState; }
+    public String getValveState() { return valveState; }
+    public void setValveState(String valveState) { this.valveState = valveState; }
+    public Double getTemperature() { return temperature; }
+    public void setTemperature(Double temperature) { this.temperature = temperature; }
+    public Double getMoisture() { return moisture; }
+    public void setMoisture(Double moisture) { this.moisture = moisture; }
+    public Double getWaterLevel() { return waterLevel; }
+    public void setWaterLevel(Double waterLevel) { this.waterLevel = waterLevel; }
+}

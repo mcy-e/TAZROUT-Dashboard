@@ -1,6 +1,6 @@
 //? Data model for a single AI decision log entry.
 //? Matches AiDecision entity in BACKEND_DATA_REQUIREMENTS.md.
-// TODO :: Deserialize from MQTT JSON: tazrout/ai/decisions/{id}
+//? Deserialized from tazrout/ai/decisions and tazrout/ai/decisions/latest frames.
 
 //& Imports
 import 'dart:ui';
@@ -30,6 +30,28 @@ class AiDecisionModel {
     required this.farmerAdvice,
   });
 
+  //* Deserializes from backend AI_DECISION packet JSON
+  factory AiDecisionModel.fromJson(Map<String, dynamic> json) {
+    final typeStr = (json['decision_type'] as String?)?.toUpperCase() ?? 'ADVICE';
+    final type = switch (typeStr) {
+      'IRRIGATION' => DecisionType.irrigation,
+      'ALERT' => DecisionType.alert,
+      'CRITICAL' => DecisionType.critical,
+      _ => DecisionType.advice,
+    };
+    final rawZones = json['affected_zones'];
+    final zones = rawZones is List ? rawZones.cast<String>() : <String>[];
+    return AiDecisionModel(
+      decisionId: json['decision_id'] as String? ?? '',
+      decisionDate: DateTime.tryParse(json['decision_date'] as String? ?? '') ?? DateTime.now(),
+      type: type,
+      affectedZones: zones,
+      description: json['description'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
+      farmerAdvice: json['farmer_advice'] as String? ?? '',
+    );
+  }
+
   //* Helper to get display label per type
   String get label {
     switch (type) {
@@ -58,3 +80,4 @@ class AiDecisionModel {
     }
   }
 }
+

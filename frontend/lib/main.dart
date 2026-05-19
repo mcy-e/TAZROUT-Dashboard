@@ -9,11 +9,15 @@ import 'providers/theme_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/preferences_provider.dart';
 import 'providers/sleep_provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/web_socket_service.dart';
 
 //& App Entry Point
 Future<void> main() async {
   //* Ensure Flutter binding is ready before any async work
   WidgetsFlutterBinding.ensureInitialized();
+  //* Load environment variables
+  await dotenv.load(fileName: ".env");
   //* Mark new session in log file
   await AppLogger.startSession();
   //* Log app launch
@@ -39,6 +43,10 @@ class _TazroutAppState extends ConsumerState<TazroutApp> {
     super.initState();
     //* Apply saved preferences on first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      //* Connect WebSocket
+      final wsUrl = dotenv.get('WEBSOCKET_URL', fallback: 'ws://localhost:8080/api/v1/ws/realtime');
+      ref.read(webSocketServiceProvider).connect(wsUrl);
+
       final prefs = ref.read(preferencesProvider);
       //* Apply theme
       ref.read(themeModeProvider.notifier).state =

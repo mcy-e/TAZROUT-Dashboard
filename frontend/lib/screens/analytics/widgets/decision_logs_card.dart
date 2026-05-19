@@ -1,79 +1,50 @@
 //? Scrollable table of AI decision log entries.
 //? Filter tabs: All / Irrigation / Alerts / Advice.
 //? Each row: ID | Date | Type badge | Details.
-// TODO :: Wire to MQTT topic: tazrout/ai/decisions
+//? Wired to MQTT topic: tazrout/ai/decisions
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_text_direction.dart';
 import '../../../../widgets/common/empty_state_widget.dart';
+import '../../../../providers/ai_decision_provider.dart';
+import '../../../../models/ai_decision_model.dart';
+import 'package:intl/intl.dart';
 
 //& DecisionLogsCard Widget
-class DecisionLogsCard extends StatefulWidget {
+class DecisionLogsCard extends ConsumerStatefulWidget {
   //* StatefulWidget — displays filtered AI decision logs
   const DecisionLogsCard({super.key});
 
   @override
-  State<DecisionLogsCard> createState() => _DecisionLogsCardState();
+  ConsumerState<DecisionLogsCard> createState() => _DecisionLogsCardState();
 }
 
-class _DecisionLogsCardState extends State<DecisionLogsCard> {
+class _DecisionLogsCardState extends ConsumerState<DecisionLogsCard> {
   //* Internal filter keys (stable English) — labels come from l10n
   String _selectedFilterKey = 'all';
-
-  static const List<Map<String, String>> _allLogs = [
-    {
-      'id': 'DEC-2024-001',
-      'date': 'Oct 15, 2024',
-      'type': 'IRRIGATION',
-      // DATA — no l10n, comes from MQTT/API
-      'details': 'Watered Zones A, B (20 mins)',
-    },
-    {
-      'id': 'WRN-2024-089',
-      'date': 'Oct 14, 2024',
-      'type': 'ALERT',
-      'details': 'High temp variance detected in Zone C',
-    },
-    {
-      'id': 'ADV-2024-012',
-      'date': 'Oct 14, 2024',
-      'type': 'ADVICE',
-      'details': 'Optimal time to check NPK levels',
-    },
-    {
-      'id': 'DEC-2024-002',
-      'date': 'Oct 13, 2024',
-      'type': 'IRRIGATION',
-      'details': 'Watered Zone F (15 mins)',
-    },
-    {
-      'id': 'ERR-2024-005',
-      'date': 'Oct 12, 2024',
-      'type': 'CRITICAL',
-      'details': 'Valve Failure detected in Zone B',
-    },
-  ];
-
-  List<Map<String, String>> get _filteredLogs {
-    if (_selectedFilterKey == 'all') return _allLogs;
-    final map = {
-      'irrigation': 'IRRIGATION',
-      'alerts': 'ALERT',
-      'advice': 'ADVICE',
+  List<AiDecisionModel> _getFilteredLogs(List<AiDecisionModel> allLogs) {
+    if (_selectedFilterKey == 'all') return allLogs;
+    final target = switch (_selectedFilterKey) {
+      'irrigation' => DecisionType.irrigation,
+      'alerts' => DecisionType.alert,
+      'advice' => DecisionType.advice,
+      _ => null,
     };
-    final target = map[_selectedFilterKey];
-    if (target == null) return _allLogs;
-    return _allLogs.where((log) => log['type'] == target).toList();
+    if (target == null) return allLogs;
+    return allLogs.where((log) => log.type == target).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final logs = ref.watch(aiDecisionProvider).log;
+    final filteredLogs = _getFilteredLogs(logs);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -150,12 +121,12 @@ class _DecisionLogsCardState extends State<DecisionLogsCard> {
             Divider(color: isDark ? AppColors.darkStrokeDivider : AppColors.lightStrokeDivider, height: 1),
             //* Scrollable Table Body
             Expanded(
-              child: _filteredLogs.isEmpty
+              child: filteredLogs.isEmpty
                   ? EmptyStateWidget(message: l10n.emptyStateNoData)
                   : ListView.builder(
-                      itemCount: _filteredLogs.length,
+                      itemCount: filteredLogs.length,
                       itemBuilder: (context, index) {
-                        return _DecisionLogRow(log: _filteredLogs[index]);
+                        return _DecisionLogRow(log: filteredLogs[index]);
                       },
                     ),
             ),
@@ -239,7 +210,7 @@ class _FilterTabs extends StatelessWidget {
 
 //& _DecisionLogRow Widget
 class _DecisionLogRow extends StatefulWidget {
-  final Map<String, String> log;
+  final AiDecisionModel log;
 
   const _DecisionLogRow({required this.log});
 
@@ -250,27 +221,15 @@ class _DecisionLogRow extends StatefulWidget {
 class _DecisionLogRowState extends State<_DecisionLogRow> {
   bool _isHovered = false;
 
-  Color _typeColor(String type) {
-    switch (type) {
-      case 'IRRIGATION':
-        return AppColors.primary;
-      case 'ALERT':
-        return AppColors.warningSolid;
-      case 'ADVICE':
-        return AppColors.infoSolid;
-      default:
-        return AppColors.errorSolid;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final id = widget.log['id'] ?? '';
-    final date = widget.log['date'] ?? '';
-    final type = widget.log['type'] ?? '';
-    final details = widget.log['details'] ?? '';
-    final typeColor = _typeColor(type);
+    final id = widget.log.decisionId;
+    final shortId = id.length > 8 ? '${id.substring(0, 8)}…' : id;
+    final date = DateFormat('MMM dd, yyyy').format(widget.log.decisionDate);
+    final type = widget.log.label;
+    final details = widget.log.description;
+    final typeColor = widget.log.color;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -292,7 +251,7 @@ class _DecisionLogRowState extends State<_DecisionLogRow> {
             Expanded(
               flex: 2,
               child: Text(
-                id,
+                shortId,
                 textDirection: textDirectionForUiLocale(context),
                 style: AppTypography.captionMedium.copyWith(
                   color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,

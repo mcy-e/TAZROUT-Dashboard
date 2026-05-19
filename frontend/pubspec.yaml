@@ -58,4 +58,5 @@ flutter:
       - assets/images/show_satas_nav/
       - assets/sounds/
       - assets/docs/user-manuals/
+      - assets/data/
       - .env

@@ -1,6 +1,6 @@
 //? Small card showing AI observation text.
 //? Checkmark or info icon top-left.
-// TODO :: Wire to MQTT topic: tazrout/ai/latest-decision (notes field)
+//? Wired to MQTT topic: tazrout/ai/latest-decision (notes field)
 
 //& Imports
 import 'dart:ui';
@@ -14,6 +14,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../providers/preferences_provider.dart';
+import '../../../../providers/ai_decision_provider.dart';
 
 //& ObservationCard Widget
 class ObservationCard extends ConsumerStatefulWidget {
@@ -33,6 +34,10 @@ class _ObservationCardState extends ConsumerState<ObservationCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final animDuration = ref.watch(preferencesProvider).animDuration;
+    
+    // DATA from MQTT/API
+    final decisionState = ref.watch(aiDecisionProvider);
+    final observationText = decisionState.latest?.notes ?? '';
 
     final borderColor = _isHovered
         ? AppColors.series3Amber.withValues(alpha: 0.60)
@@ -57,7 +62,38 @@ class _ObservationCardState extends ConsumerState<ObservationCard> {
             width: _isHovered ? 1.5 : 1.0,
           ),
         ),
-        child: ClipRRect(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard,
+                title: Row(
+                  children: [
+                    SvgPicture.asset(
+                      isDark ? AppAssets.darkIconObservation : AppAssets.lightIconObservation,
+                      width: 24, height: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(l10n.observationTitle, style: AppTypography.headingS),
+                  ],
+                ),
+                content: Text(
+                  observationText,
+                  style: AppTypography.bodyMBold,
+                  textDirection: textDirectionForUiLocale(context),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n.closeTooltip, style: TextStyle(color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
@@ -179,8 +215,7 @@ class _ObservationCardState extends ConsumerState<ObservationCard> {
                           ),
                         ),
                         child: Text(
-                          // DATA — no l10n, comes from MQTT/API
-                          'Detected high temperature variance in Zone D sensor array.',
+                          observationText,
                           textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.bodySRegular.copyWith(
                             color: isDark
@@ -198,6 +233,7 @@ class _ObservationCardState extends ConsumerState<ObservationCard> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

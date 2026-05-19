@@ -74,6 +74,7 @@ class ZonesScreen extends ConsumerWidget {
                     runSpacing: 16,
                     children: zones.map((zone) {
                       return SizedBox(
+                        key: ValueKey(zone.zoneId),
                         width: cardWidth,
                         child: ZoneCard(zone: zone),
                       );

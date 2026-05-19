@@ -1,6 +1,6 @@
 //? Shows the most recent AI decision with an Amazigh symbol top-right.
 //? Card has a subtle background pattern at low opacity.
-// TODO :: Wire to MQTT topic: tazrout/ai/latest-decision
+//? Wired to MQTT topic: tazrout/ai/latest-decision via aiDecisionProvider.
 
 //& Imports
 import 'package:flutter/material.dart';
@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../providers/preferences_provider.dart';
+import '../../../../providers/ai_decision_provider.dart';
 import '../../../../widgets/common/empty_state_widget.dart';
 
 //& AiLatestDecisionCard Widget
@@ -35,10 +36,9 @@ class _AiLatestDecisionCardState extends ConsumerState<AiLatestDecisionCard> {
     final panelColor =
         isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard;
 
-    // TODO :: Replace with MQTT topic: tazrout/ai/latest-decision
-    // DATA — no l10n, comes from MQTT/API
-    final decisionText =
-        'Initiated precision irrigation sequence for Zone A, B, and C. Soil moisture analysis indicated levels below critical threshold (< 30%).';
+    // DATA from MQTT/API
+    final decisionState = ref.watch(aiDecisionProvider);
+    final decisionText = decisionState.latest?.description ?? '';
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

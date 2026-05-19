@@ -1,10 +1,18 @@
 /*
  * FILE: DatabaseConfig.java
- * PURPOSE: Configures PostgreSQL DataSource, JPA EntityManagerFactory,
- *          and transaction manager. Reads DB credentials from
- *          application.properties.
- * MQTT TOPICS: N/A
- * DATABASE: PostgreSQL — connection pool configuration for all tables
- * DEPENDENCIES: spring-boot-starter-data-jpa, PostgreSQL JDBC driver, application.properties
+ * PURPOSE: Spring Boot auto-configures the DataSource from application.properties.
+ *          This class is retained as the configuration anchor for future
+ *          customization (connection pool sizing, schema validation, etc).
+ *          No explicit bean definitions are needed — Spring Boot's
+ *          DataSourceAutoConfiguration handles everything.
+ * DATABASE: PostgreSQL (all tables: zones, sensor_readings, ai_decisions, user_preferences)
+ * DEPENDENCIES: spring-boot-starter-data-jpa, application.properties
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.config;
+
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class DatabaseConfig {
+}

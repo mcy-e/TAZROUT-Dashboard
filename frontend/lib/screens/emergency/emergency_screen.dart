@@ -1,8 +1,7 @@
 //? Emergency control screen.
 //? Displays live zone device states and emergency stop trigger.
 //? EmergencyStopButton is frontend-managed — no backend endpoint.
-// TODO :: Wire zone states to MQTT topic: tazrout/emergency/status
-// TODO :: Update hasEmergencyAlertProvider when any zone is OFFLINE
+//? Wired to zonesProvider for live status tracking.
 
 //& Imports
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import '../../../core/theme/app_colors.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../providers/navigation_provider.dart';
+import '../../../providers/zone_provider.dart';
 import 'widgets/zone_status_grid.dart';
 import 'widgets/emergency_stop_button.dart';
 
@@ -28,20 +28,12 @@ class EmergencyScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isEmergencyActive = ref.watch(hasEmergencyAlertProvider);
 
-    //* Static list of 9 zones with mixed online/offline states
-    //* If emergency is active, all zones go offline (no reading)
-    // TODO :: Replace with real MQTT data from topic: tazrout/emergency/status
-    final List<Map<String, dynamic>> rawZones = [
-      {'zoneName': 'Zone A', 'isOnline': true},
-      {'zoneName': 'Zone B', 'isOnline': true},
-      {'zoneName': 'Zone C', 'isOnline': true},
-      {'zoneName': 'Zone D', 'isOnline': false},
-      {'zoneName': 'Zone E', 'isOnline': false},
-      {'zoneName': 'Zone F', 'isOnline': true},
-      {'zoneName': 'Zone G', 'isOnline': true},
-      {'zoneName': 'Zone H', 'isOnline': true},
-      {'zoneName': 'Zone I', 'isOnline': true},
-    ];
+    //* Fetch live zones and map them to the format expected by ZoneStatusGrid
+    final liveZones = ref.watch(zonesProvider);
+    final List<Map<String, dynamic>> rawZones = liveZones.map((z) => {
+      'zoneName': z.zoneName,
+      'isOnline': z.isOnline,
+    }).toList();
 
     final List<Map<String, dynamic>> zones = isEmergencyActive
         ? rawZones.map((z) => {...z, 'isOnline': false}).toList()

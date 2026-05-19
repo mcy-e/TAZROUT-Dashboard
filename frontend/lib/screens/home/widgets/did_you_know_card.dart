@@ -3,13 +3,17 @@
 //? Highlighted percentage value in AppColors.primary bold.
 // TODO :: Wire fact to MQTT topic: tazrout/dashboard/summary
 
-//& Imports
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/localization/l10n/app_localizations.dart';
 import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/locale_text_direction.dart';
+import '../../../core/utils/app_logger.dart';
 
 //& DidYouKnowCard
 class DidYouKnowCard extends StatefulWidget {
@@ -21,11 +25,87 @@ class DidYouKnowCard extends StatefulWidget {
 
 class _DidYouKnowCardState extends State<DidYouKnowCard> {
   bool _isHovered = false;
+  int _currentIndex = 0;
+  Timer? _timer;
+  List<Map<String, dynamic>> _facts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFacts();
+  }
+
+  Future<void> _loadFacts() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/data/facts.json');
+      final List<dynamic> parsed = jsonDecode(jsonString);
+      
+      if (!mounted) return;
+      setState(() {
+        _facts = parsed.map((e) => e as Map<String, dynamic>).toList();
+        _isLoading = false;
+      });
+
+      if (_facts.isNotEmpty) {
+        _timer = Timer.periodic(const Duration(seconds: 15), (_) {
+          if (mounted) {
+            setState(() => _currentIndex = (_currentIndex + 1) % _facts.length);
+          }
+        });
+      }
+    } catch (e, st) {
+      AppLogger.error('HOME', 'Failed to load facts.json', e, st);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  List<TextSpan> _parseFactText(String text, bool isDark) {
+    final spans = <TextSpan>[];
+    final parts = text.split('**');
+    for (int i = 0; i < parts.length; i++) {
+      if (i % 2 == 1) {
+        // Bold part
+        spans.add(TextSpan(
+          text: parts[i],
+          style: AppTypography.bodyMBold.copyWith(color: AppColors.primary),
+        ));
+      } else {
+        // Regular part
+        spans.add(TextSpan(
+          text: parts[i],
+        ));
+      }
+    }
+    return spans;
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Card(
+        margin: EdgeInsets.zero,
+        child: SizedBox(height: 140, child: Center(child: CircularProgressIndicator())),
+      );
+    }
+    
+    if (_facts.isEmpty) {
+      return const SizedBox.shrink(); // Hide completely if json is empty or failed
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final locale = l10n.localeName; // 'en', 'fr', or 'ar'
+    
+    // Fallback to English if language key is missing
+    final factMap = _facts[_currentIndex];
+    final currentFactText = factMap[locale] ?? factMap['en'] ?? '';
 
     return Card(
       margin: EdgeInsets.zero,
@@ -131,23 +211,18 @@ class _DidYouKnowCardState extends State<DidYouKnowCard> {
                   ),
                   const SizedBox(height: 12),
                   //* Fact text with quoted wrapper and bold percentage
-                  // TODO :: Wire to MQTT topic: tazrout/dashboard/summary
-                  RichText(
-                    text: TextSpan(
-                      style: AppTypography.bodySRegular.copyWith(
-                        color: isDark ? AppColors.darkBodyText : AppColors.lightBodyText,
-                        height: 1.5,
-                      ),
-                      children: [
-                        const TextSpan(text: '“Precision irrigation can reduce water usage by up to '),
-                        TextSpan(
-                          text: '50%',
-                          style: AppTypography.bodyMBold.copyWith(
-                            color: AppColors.primary,
-                          ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    child: RichText(
+                      key: ValueKey(_currentIndex),
+                      textDirection: textDirectionForUiLocale(context),
+                      text: TextSpan(
+                        style: AppTypography.bodySRegular.copyWith(
+                          color: isDark ? AppColors.darkBodyText : AppColors.lightBodyText,
+                          height: 1.5,
                         ),
-                        const TextSpan(text: ' while improving crop yields.”'),
-                      ],
+                        children: _parseFactText(currentFactText, isDark),
+                      ),
                     ),
                   ),
                 ],

@@ -6,20 +6,29 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
+import '../../../../core/utils/locale_text_direction.dart';
+import '../../../../providers/analytics_provider.dart';
+import '../../../../widgets/common/empty_state_widget.dart';
 
 //& EnvStatsCard Widget
-class EnvStatsCard extends StatelessWidget {
-  //* StatelessWidget — displays environmental statistics line chart
+class EnvStatsCard extends ConsumerWidget {
+  //* ConsumerWidget — displays environmental statistics line chart
   const EnvStatsCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final analyticsState = ref.watch(analyticsProvider);
+    
+    // Mock data mimicking history points for 7 days
+    final tempData = analyticsState.envTemp;
+    final humData = analyticsState.envHum;
+    final bool hasData = tempData.isNotEmpty && humData.isNotEmpty;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -109,7 +118,9 @@ class EnvStatsCard extends StatelessWidget {
             const SizedBox(height: 8),
             //* Large KPI number — DATA from MQTT
             Text(
-              '24°C',
+              hasData
+                  ? '${analyticsState.envTemp.last.toStringAsFixed(1)}°C'
+                  : '--',
               textAlign: isArabic(context) ? TextAlign.right : TextAlign.left,
               textDirection: textDirectionForUiLocale(context),
               style: AppTypography.displayL.copyWith(
@@ -128,53 +139,47 @@ class EnvStatsCard extends StatelessWidget {
             const SizedBox(height: 8),
             //* Line Chart area
             Expanded(
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    //* Temp Line: AppColors.errorSolid
-                    LineChartBarData(
-                      spots: const [
-                        FlSpot(0, 22),
-                        FlSpot(1, 23),
-                        FlSpot(2, 24),
-                        FlSpot(3, 22),
-                        FlSpot(4, 25),
-                        FlSpot(5, 24),
-                        FlSpot(6, 23),
-                        FlSpot(7, 24),
+              child: hasData 
+                ? LineChart(
+                    LineChartData(
+                      gridData: const FlGridData(show: false),
+                      titlesData: const FlTitlesData(show: false),
+                      borderData: FlBorderData(show: false),
+                      lineBarsData: [
+                        //* Temp Line: real sliding window from zonesProvider
+                        LineChartBarData(
+                          spots: tempData
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                          isCurved: true,
+                          color: AppColors.errorSolid,
+                          barWidth: 2,
+                          dotData: const FlDotData(show: false),
+                        ),
+                        //* Humidity Line: real sliding window
+                        LineChartBarData(
+                          spots: humData
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                          isCurved: true,
+                          color: AppColors.series2Blue,
+                          barWidth: 2,
+                          dotData: const FlDotData(show: false),
+                        ),
                       ],
-                      isCurved: true,
-                      color: AppColors.errorSolid,
-                      barWidth: 2,
-                      dotData: const FlDotData(show: false),
+                      minX: 0,
+                      maxX: (tempData.length - 1).toDouble(),
+                      minY: 0,
+                      maxY: [tempData.isEmpty ? 50.0 : tempData.reduce((a, b) => a > b ? a : b),
+                             humData.isEmpty ? 100.0 : humData.reduce((a, b) => a > b ? a : b)]
+                          .reduce((a, b) => a > b ? a : b) * 1.3,
                     ),
-                    //* Humidity Line: AppColors.series2Blue
-                    LineChartBarData(
-                      spots: const [
-                        FlSpot(0, 45),
-                        FlSpot(1, 48),
-                        FlSpot(2, 44),
-                        FlSpot(3, 46),
-                        FlSpot(4, 42),
-                        FlSpot(5, 45),
-                        FlSpot(6, 47),
-                        FlSpot(7, 45),
-                      ],
-                      isCurved: true,
-                      color: AppColors.series2Blue,
-                      barWidth: 2,
-                      dotData: const FlDotData(show: false),
-                    ),
-                  ],
-                  minX: 0,
-                  maxX: 7,
-                  minY: 20,
-                  maxY: 50,
-                ),
-              ),
+                  )
+                : EmptyStateWidget(message: l10n.emptyStateNoData),
             ),
           ],
         ),

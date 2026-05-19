@@ -1,7 +1,7 @@
 //? Represents a single in-app notification event.
 
 //& Notification Type Enum
-enum NotificationType { sensorAlert, aiDecision }
+enum NotificationType { sensorAlert, aiDecision, systemInfo, emergency }
 
 //& Notification Model
 class NotificationModel {

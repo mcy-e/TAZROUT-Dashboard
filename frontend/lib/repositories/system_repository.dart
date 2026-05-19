@@ -1,21 +1,27 @@
 //? Repository for handling system-level actions.
 //? Manages Reboot, Shutdown, and Emergency Stop logic.
-//? Currently prints to terminal until MQTT backend is ready.
+//? Publishes commands via WebSocketService to be relayed to MQTT.
 
 //& Imports
+import '../core/constants/mqtt_topics.dart';
 import '../core/utils/app_logger.dart';
+import '../services/web_socket_service.dart';
 
 //& SystemRepository
 class SystemRepository {
+  final WebSocketService _wsService;
+
+  SystemRepository(this._wsService);
+
   //* Perform a full system reboot
   //* Reboots the whole system including microcontrollers and the server.
   Future<void> rebootSystem() async {
     try {
       //* Send reboot command to server
-      // TODO :: Replace with MQTT topic: tazrout/system/reboot
+      _wsService.publish(MqttTopics.systemControl, {'command': 'REBOOT'});
       
       //* Signal microcontrollers to reset
-      // TODO :: Replace with MQTT topic: tazrout/mcu/all/reset
+      _wsService.publish('tazrout/mcu/all/reset', {'command': 'RESET'});
 
       AppLogger.info('SYSTEM', 'Reboot performed successfully: All systems and microcontrollers restarting.');
     } catch (e, stackTrace) {
@@ -29,13 +35,13 @@ class SystemRepository {
   Future<void> shutdownSystem() async {
     try {
       //* Check device statuses before closing
-      // TODO :: Replace with MQTT topic: tazrout/system/status/check
+      _wsService.publish('tazrout/system/status/check', {'command': 'CHECK_STATUS'});
       
       //* Gracefully close active processes/connections
-      // TODO :: Replace with MQTT topic: tazrout/system/process/close
+      _wsService.publish('tazrout/system/process/close', {'command': 'CLOSE_PROCESSES'});
 
       //* Send final shutdown command to PC
-      // TODO :: Replace with MQTT topic: tazrout/system/shutdown
+      _wsService.publish(MqttTopics.systemControl, {'command': 'SHUTDOWN'});
 
       AppLogger.info('SYSTEM', 'Shutdown performed successfully: Graceful closure of all components completed.');
     } catch (e, stackTrace) {
@@ -49,10 +55,10 @@ class SystemRepository {
   Future<void> emergencyStop() async {
     try {
       //* Fire instant stop signal to all hardware
-      // TODO :: Replace with MQTT topic: tazrout/emergency/stop
+      _wsService.publish(MqttTopics.systemEmergencyStop, {'command': 'EMERGENCY_STOP'});
       
       //* Kill all active server tasks
-      // TODO :: Replace with MQTT topic: tazrout/system/emergency/kill
+      _wsService.publish('tazrout/system/emergency/kill', {'command': 'KILL_TASKS'});
 
       AppLogger.critical('EMERGENCY', 'Emergency stop performed successfully: All operations halted instantly.');
     } catch (e, stackTrace) {
@@ -61,3 +67,4 @@ class SystemRepository {
     }
   }
 }
+

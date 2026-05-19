@@ -21,3 +21,29 @@
  * DEPENDENCIES: MqttConfig, WebSocketSessionManager, MqttTopics, Jackson
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.mqtt;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import dz.tazrout.dashboard.websocket.WebSocketSessionManager;
+import java.time.Instant;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MqttWebSocketBridge {
+    private final WebSocketSessionManager sessionManager;
+    private final ObjectMapper objectMapper;
+
+    public MqttWebSocketBridge(WebSocketSessionManager sessionManager, ObjectMapper objectMapper) {
+        this.sessionManager = sessionManager;
+        this.objectMapper = objectMapper;
+    }
+
+    public void forward(String topic, String payload) {
+        ObjectNode frame = objectMapper.createObjectNode();
+        frame.put("topic", topic);
+        frame.put("timestamp", Instant.now().toString());
+        frame.put("payload", payload);
+        sessionManager.broadcast(frame.toString());
+    }
+}

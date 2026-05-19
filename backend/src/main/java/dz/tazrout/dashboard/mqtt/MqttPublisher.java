@@ -25,3 +25,60 @@
  * DEPENDENCIES: MqttConfig (connection factory), MqttTopics (topic constants), Jackson (JSON serialization)
  * IMPLEMENTED BY: Mr. Fehis
  */
+package dz.tazrout.dashboard.mqtt;
+
+import jakarta.annotation.PreDestroy;
+import java.util.UUID;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MqttPublisher {
+    private static final Logger log = LoggerFactory.getLogger(MqttPublisher.class);
+    private final MqttAsyncClient client;
+
+    public MqttPublisher(
+            MqttConnectOptions connectOptions,
+            @Value("${mqtt.broker.url:tcp://localhost:1883}") String brokerUrl,
+            @Value("${mqtt.client.id:tazrout-backend}") String clientId) throws MqttException {
+        this.client = new MqttAsyncClient(brokerUrl, clientId + "-publisher-" + UUID.randomUUID());
+        this.client.connect(connectOptions).waitForCompletion();
+        
+        // Publish ONLINE status on startup
+        String payload = "{\"status\":\"ONLINE\",\"timestamp\":\"" + java.time.Instant.now().toString() + "\",\"version\":\"1.0.0\"}";
+        publish(MqttTopics.SYSTEM_BACKEND_STATUS, payload, 1, true);
+    }
+
+    public void publish(String topic, String payload) {
+        publish(topic, payload, 1, false);
+    }
+
+    public void publish(String topic, String payload, int qos, boolean retained) {
+        try {
+            MqttMessage message = new MqttMessage(payload.getBytes());
+            message.setQos(qos);
+            message.setRetained(retained);
+            client.publish(topic, message);
+        } catch (MqttException ex) {
+            log.error("Failed to publish MQTT topic {}: {}", topic, ex.getMessage(), ex);
+        }
+    }
+
+    @PreDestroy
+    public void close() {
+        try {
+            if (client.isConnected()) {
+                client.disconnect().waitForCompletion();
+            }
+            client.close();
+        } catch (MqttException ex) {
+            log.warn("Error closing MQTT publisher: {}", ex.getMessage());
+        }
+    }
+}

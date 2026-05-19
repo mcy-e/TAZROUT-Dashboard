@@ -1,6 +1,6 @@
 //? Small card showing AI recommendation text.
 //? Wrench or lightbulb icon top-left.
-// TODO :: Wire to MQTT topic: tazrout/ai/latest-decision (farmerAdvice)
+//? Wired to MQTT topic: tazrout/ai/latest-decision (farmerAdvice)
 
 //& Imports
 import 'dart:ui';
@@ -14,6 +14,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../providers/preferences_provider.dart';
+import '../../../../providers/ai_decision_provider.dart';
 
 //& RecommendationCard Widget
 class RecommendationCard extends ConsumerStatefulWidget {
@@ -33,6 +34,10 @@ class _RecommendationCardState extends ConsumerState<RecommendationCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final animDuration = ref.watch(preferencesProvider).animDuration;
+
+    // DATA from MQTT/API
+    final decisionState = ref.watch(aiDecisionProvider);
+    final recommendationText = decisionState.latest?.farmerAdvice ?? '';
 
     final borderColor = _isHovered
         ? AppColors.primary.withValues(alpha: 0.60)
@@ -57,7 +62,38 @@ class _RecommendationCardState extends ConsumerState<RecommendationCard> {
             width: _isHovered ? 1.5 : 1.0,
           ),
         ),
-        child: ClipRRect(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard,
+                title: Row(
+                  children: [
+                    SvgPicture.asset(
+                      isDark ? AppAssets.darkIconRecommendation : AppAssets.lightIconRecommendation,
+                      width: 24, height: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(l10n.recommendationTitle, style: AppTypography.headingS),
+                  ],
+                ),
+                content: Text(
+                  recommendationText,
+                  style: AppTypography.bodyMBold,
+                  textDirection: textDirectionForUiLocale(context),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n.closeTooltip, style: TextStyle(color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            );
+          },
+          child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
@@ -179,8 +215,7 @@ class _RecommendationCardState extends ConsumerState<RecommendationCard> {
                           ),
                         ),
                         child: Text(
-                          // DATA — no l10n, comes from MQTT/API
-                          'Inspect irrigation valves in Zone D manually for blockage.',
+                          recommendationText,
                           textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.bodySRegular.copyWith(
                             color: isDark
@@ -198,6 +233,7 @@ class _RecommendationCardState extends ConsumerState<RecommendationCard> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

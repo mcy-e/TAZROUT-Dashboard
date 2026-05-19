@@ -13,12 +13,16 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../models/zone_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'zone_device_badge.dart';
 import 'zone_stats_row.dart';
 import 'zone_valve_bar.dart';
 
+//& Global state for tracking which zones are expanded
+final zoneExpandedProvider = StateProvider.family<bool, String>((ref, zoneId) => false);
+
 //& ZoneCard Widget
-class ZoneCard extends StatefulWidget {
+class ZoneCard extends ConsumerStatefulWidget {
   final ZoneModel zone;
 
   //* StatefulWidget — manages its own expanded state
@@ -28,11 +32,11 @@ class ZoneCard extends StatefulWidget {
   });
 
   @override
-  State<ZoneCard> createState() => _ZoneCardState();
+  ConsumerState<ZoneCard> createState() => _ZoneCardState();
 }
 
-class _ZoneCardState extends State<ZoneCard> {
-  bool _isExpanded = false;
+class _ZoneCardState extends ConsumerState<ZoneCard> {
+
   bool _isHovered = false;
   bool _showStatsHovered = false;
   bool _hideStatsHovered = false;
@@ -40,6 +44,7 @@ class _ZoneCardState extends State<ZoneCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isExpanded = ref.watch(zoneExpandedProvider(widget.zone.zoneId));
 
     //* Wrap entire card in MouseRegion + InkWell for dual input
     return MouseRegion(
@@ -47,8 +52,9 @@ class _ZoneCardState extends State<ZoneCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: InkWell(
         onTap: () {
-          setState(() => _isExpanded = !_isExpanded);
-          if (_isExpanded) {
+          final newState = !isExpanded;
+          ref.read(zoneExpandedProvider(widget.zone.zoneId).notifier).state = newState;
+          if (newState) {
             AppLogger.nav('ZONES', 'Expanded zone ${widget.zone.zoneId}');
           }
         },
@@ -98,7 +104,7 @@ class _ZoneCardState extends State<ZoneCard> {
                   AnimatedCrossFade(
                     firstChild: _buildCollapsedBase(isDark),
                     secondChild: _buildExpandedBase(isDark),
-                    crossFadeState: _isExpanded
+                    crossFadeState: isExpanded
                         ? CrossFadeState.showSecond
                         : CrossFadeState.showFirst,
                     duration: const Duration(milliseconds: 300),
@@ -114,7 +120,7 @@ class _ZoneCardState extends State<ZoneCard> {
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
-                    opacity: _isExpanded ? 0.0 : 1.0,
+                    opacity: isExpanded ? 0.0 : 1.0,
                     child: _buildFloatingSymbol(),
                   ),
                 ),
@@ -180,7 +186,7 @@ class _ZoneCardState extends State<ZoneCard> {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: () => setState(() => _isExpanded = true),
+                    onPressed: () => ref.read(zoneExpandedProvider(widget.zone.zoneId).notifier).state = true,
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
                         color: isOnline ? AppColors.primary : AppColors.errorSolid,
@@ -312,7 +318,7 @@ class _ZoneCardState extends State<ZoneCard> {
           ),
           //* Button on top
           OutlinedButton(
-            onPressed: () => setState(() => _isExpanded = false),
+            onPressed: () => ref.read(zoneExpandedProvider(widget.zone.zoneId).notifier).state = false,
             style: OutlinedButton.styleFrom(
               side: BorderSide(
                 color: isOnline ? AppColors.primary : AppColors.errorSolid,

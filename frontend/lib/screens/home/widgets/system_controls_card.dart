@@ -2,7 +2,7 @@
 //? Both buttons are outlined, full width, with phosphor icons.
 //? Hover state: border and text turn AppColors.primary.
 //? On confirm: shows a modal dialog before executing.
-// TODO :: Wire to MQTT topic: tazrout/system/control
+//? Actions are wired to MQTT via systemControlsProvider.
 
 //& Imports
 import 'package:flutter/material.dart';
@@ -14,8 +14,6 @@ import '../../../core/constants/app_assets.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
-import '../../../models/notification_model.dart';
-import '../../../providers/notification_provider.dart';
 import '../../../providers/navigation_provider.dart';
 import '../../../providers/system_provider.dart';
 
@@ -45,30 +43,10 @@ class SystemControlsCard extends ConsumerWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            //* Header Row with Title and Test Trigger
+            //* Header Row with Title
             Row(
               children: isArabic(context)
                   ? [
-                      IconButton(
-                        icon: Icon(
-                          PhosphorIcons.bellRinging(),
-                          size: 16,
-                          color: AppColors.darkMutedText,
-                        ),
-                        tooltip: l10n.tooltipTestNotification,
-                        onPressed: () {
-                          ref.read(notificationProvider.notifier).add(
-                                NotificationModel(
-                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                                  type: NotificationType.sensorAlert,
-                                  // DATA — no l10n, comes from MQTT/API
-                                  title: l10n.testNotificationTitle,
-                                  message: l10n.testNotificationMessage,
-                                  timestamp: DateTime.now(),
-                                ),
-                              );
-                        },
-                      ),
                       const Spacer(),
                       Text(
                         l10n.systemControls,
@@ -89,29 +67,6 @@ class SystemControlsCard extends ConsumerWidget {
                         ),
                       ),
                       const Spacer(),
-                      //* Test notification trigger — remove after MQTT is wired
-                      //* Accessible via a small debug IconButton in the card header
-                      // TODO :: Remove test trigger when MQTT events are live
-                      IconButton(
-                        icon: Icon(
-                          PhosphorIcons.bellRinging(),
-                          size: 16,
-                          color: AppColors.darkMutedText,
-                        ),
-                        tooltip: l10n.tooltipTestNotification,
-                        onPressed: () {
-                          ref.read(notificationProvider.notifier).add(
-                                NotificationModel(
-                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                                  type: NotificationType.sensorAlert,
-                                  // DATA — no l10n, comes from MQTT/API
-                                  title: l10n.testNotificationTitle,
-                                  message: l10n.testNotificationMessage,
-                                  timestamp: DateTime.now(),
-                                ),
-                              );
-                        },
-                      ),
                     ],
             ),
             const SizedBox(height: 16),
@@ -123,7 +78,6 @@ class SystemControlsCard extends ConsumerWidget {
             const SizedBox(height: 12),
             //* SHUT DOWN button
             _ControlButton(
-              // TODO :: Wire to MQTT topic: tazrout/system/control
               label: l10n.shutdown,
               darkIcon: AppAssets.darkIconShutDownI,
               lightIcon: AppAssets.lightIconShutDownI,

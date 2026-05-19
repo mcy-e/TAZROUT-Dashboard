@@ -225,48 +225,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportGetSupport => 'Get Support';
 
   @override
-  String get faqOfflineTitle => 'System Offline?';
+  String get faqOfflineTitle => 'Sensors Offline?';
 
   @override
   String get faqOfflineDesc =>
-      'If zones appear offline, check the main power supply and ensure the gateway is connected to the network.';
+      'If zones appear offline, verify the ESP32 node power supply and LoRa gateway connection.';
 
   @override
   String get faqErraticTitle => 'Erratic Readings?';
 
   @override
   String get faqErraticDesc =>
-      'Sensor calibration may be required. Visit the Zones tab to run a diagnostic test on specific sensors.';
+      'Sensor calibration required. Check soil moisture and temperature probes for physical damage.';
 
   @override
-  String get faqSyncTitle => 'Data Not Syncing?';
+  String get faqSyncTitle => 'Dashboard Disconnected?';
 
   @override
   String get faqSyncDesc =>
-      'Ensure your internet connection is stable. Data will cache locally and sync once connection is restored.';
+      'Verify your LAN connection to the central server. The system operates entirely offline.';
 
   @override
-  String get faqAccessTitle => 'Access Denied?';
+  String get faqAccessTitle => 'Emergency Override?';
 
   @override
   String get faqAccessDesc =>
-      'Contact your administrator to verify your permissions settings if you cannot access certain controls.';
+      'The dashboard is read-only. Only use the Emergency Stop button during critical failures.';
 
   @override
   String get faqOfflineDetailed =>
-      'Check that all zone controllers are powered on and connected to the main gateway. Verify the network router is active and the gateway LED is green. If the issue persists, restart the gateway and wait 60 seconds before checking again.';
+      'Ensure all ESP32 zone controllers are powered on and within range of the LoRa gateway. Verify the Raspberry Pi gateway is active and publishing to the Mosquitto broker on port 1883.';
 
   @override
   String get faqErraticDetailed =>
-      'Sensor drift may be caused by physical damage, moisture ingress, or calibration loss. Navigate to the Zones tab, select the affected zone, and run a diagnostic. Replace the sensor if readings remain inconsistent after calibration.';
+      'Sensor drift may be caused by physical damage, water ingress, or soil displacement. Inspect the sensors in the affected zone. The AI Engine requires accurate telemetry to make optimal irrigation decisions.';
 
   @override
   String get faqSyncDetailed =>
-      'Verify your internet connection is active. The system caches data locally and will sync automatically once connection is restored. If syncing does not resume within 5 minutes of reconnecting, restart the dashboard application.';
+      'Tazrout is a LAN-only system and does not require internet. Verify your device is on the same local network as the central server. Check that the Spring Boot backend WebSocket bridge is running on port 8085.';
 
   @override
   String get faqAccessDetailed =>
-      'Your account may lack the required permissions for this action. Contact your system administrator to review and update your access rights. Do not attempt to bypass access controls.';
+      'To prevent conflicting commands, the Flutter dashboard is designed as a read-only monitoring interface. The Python AI Engine autonomously controls all valves. The Emergency Stop function is the only manual override available.';
 
   @override
   String get aiLatestDecisionTitle => 'AI Latest Decision';
@@ -383,10 +383,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The comprehensive user manual content will be rendered here.\nThis area is designed to handle embedded PDF viewers\nor rich text documentation.';
 
   @override
-  String get manualFooterMeta => 'Last updated: Oct 24, 2024 • Version 2.0';
+  String get manualFooterMeta =>
+      'Last updated: Apr 19, 2026 • Version 1.0-BETA';
 
   @override
-  String get manualPdfFileName => 'manual_v2.0.pdf';
+  String get manualPdfFileName => 'manual_v1.0-BETA.pdf';
 
   @override
   String get emptyStateNoData => 'No data available';
@@ -519,4 +520,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ok => 'OK';
+
+  @override
+  String get viewAll => 'View All';
 }

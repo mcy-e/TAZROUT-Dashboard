@@ -86,8 +86,24 @@ class _NotificationToastState extends State<NotificationToast> with SingleTicker
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isSensorAlert = widget.notification.type == NotificationType.sensorAlert;
-    final accentColor = isSensorAlert ? AppColors.series3Amber : AppColors.series2Blue;
+    Color accentColor;
+    IconData icon;
+
+    switch (widget.notification.type) {
+      case NotificationType.sensorAlert:
+        accentColor = AppColors.series3Amber;
+        icon = PhosphorIcons.warning();
+      case NotificationType.aiDecision:
+        accentColor = AppColors.series2Blue;
+        icon = PhosphorIcons.cpu();
+      case NotificationType.emergency:
+        accentColor = AppColors.errorSolid;
+        icon = PhosphorIcons.shieldWarning();
+      case NotificationType.systemInfo:
+        accentColor = AppColors.primary;
+        icon = PhosphorIcons.info();
+    }
+
     final formattedTime = DateFormat('HH:mm:ss').format(widget.notification.timestamp);
 
     //* SlideTransition + FadeTransition wrapping
@@ -120,7 +136,7 @@ class _NotificationToastState extends State<NotificationToast> with SingleTicker
             children: [
               //* Type icon
               Icon(
-                isSensorAlert ? PhosphorIcons.warning() : PhosphorIcons.cpu(),
+                icon,
                 size: 20,
                 color: accentColor,
               ),

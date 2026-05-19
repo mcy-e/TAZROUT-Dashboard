@@ -1,91 +1,83 @@
 //? Provider for managing agricultural zones state.
 //? Holds the current list of zones and their real-time sensor/device states.
-// TODO :: Wire to MQTT topic: tazrout/zones/#
+//? Populated from tazrout/dashboard/summary (zone list) and
+//? tazrout/zones/{zoneId}/sensors (live sensor readings per zone).
 
 //& Imports
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/constants/mqtt_topics.dart';
+import '../core/utils/app_logger.dart';
+import '../models/ws_frame.dart';
 import '../models/zone_model.dart';
+import '../services/web_socket_service.dart';
 
 //& ZoneNotifier Class
 class ZoneNotifier extends Notifier<List<ZoneModel>> {
+  StreamSubscription<WsFrame>? _sub;
+
   @override
   List<ZoneModel> build() {
-    //* Initial static placeholder list
-    return const [
-      ZoneModel(
-        zoneId: 'A',
-        zoneName: 'Zone A',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 24,
-        moisture: 620,
-        waterLevel: 0.45,
-      ),
-      ZoneModel(
-        zoneId: 'B',
-        zoneName: 'Zone B',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 22,
-        moisture: 580,
-        waterLevel: 0.38,
-      ),
-      ZoneModel(
-        zoneId: 'C',
-        zoneName: 'Zone C',
-        isOnline: false,
-        isValveOpen: false,
-        temperature: 0,
-        moisture: 0,
-        waterLevel: 0,
-      ),
-      ZoneModel(
-        zoneId: 'D',
-        zoneName: 'Zone D',
-        isOnline: true,
-        isValveOpen: false,
-        temperature: 26,
-        moisture: 700,
-        waterLevel: 0.52,
-      ),
-      ZoneModel(
-        zoneId: 'E',
-        zoneName: 'Zone E',
-        isOnline: false,
-        isValveOpen: false,
-        temperature: 0,
-        moisture: 0,
-        waterLevel: 0,
-      ),
-      ZoneModel(
-        zoneId: 'F',
-        zoneName: 'Zone F',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 21,
-        moisture: 610,
-        waterLevel: 0.41,
-      ),
-      ZoneModel(
-        zoneId: 'G',
-        zoneName: 'Zone G',
-        isOnline: true,
-        isValveOpen: true,
-        temperature: 23,
-        moisture: 590,
-        waterLevel: 0.44,
-      ),
-    ];
+    final wsService = ref.watch(webSocketServiceProvider);
+    _sub?.cancel();
+    _sub = wsService.frames.listen(_handleFrame);
+    ref.onDispose(() => _sub?.cancel());
+    //* Starts empty — populated as WS frames arrive
+    return [];
   }
 
-  //* Sets all zones to offline state and closes their valves
-  //* Used primarily during emergency stops
+  void _handleFrame(WsFrame frame) {
+    try {
+      if (frame.topic == MqttTopics.dashboardSummary) {
+        //* Full zone list snapshot from backend ZoneService
+        final json = jsonDecode(frame.payload) as Map<String, dynamic>;
+        final items = json['zones'] as List?;
+        if (items == null) return;
+        final incoming = items
+            .cast<Map<String, dynamic>>()
+            .map(ZoneModel.fromSummaryJson)
+            .toList();
+        //* Preserve sensor readings already cached from sensor frames
+        final existing = {for (final z in state) z.zoneId: z};
+        state = incoming.map((z) {
+          final prev = existing[z.zoneId];
+          if (prev == null) return z;
+          
+          //? IMPORTANT: Preserve the online and valve states if they were updated by live frames
+          //? This prevents the summary (which may be lagging) from flickering zones back to offline.
+          return z.copyWith(
+            isOnline: z.isOnline || prev.isOnline,
+            isValveOpen: z.isValveOpen || prev.isValveOpen,
+            temperature: prev.temperature != 0.0 ? prev.temperature : z.temperature,
+            moisture: prev.moisture != 0.0 ? prev.moisture : z.moisture,
+            waterLevel: prev.waterLevel != 0.0 ? prev.waterLevel : z.waterLevel,
+          );
+        }).toList();
+      } else if (MqttTopics.isZoneSensorTopic(frame.topic)) {
+        //* Per-zone sensor reading — merge onto existing zone snapshot
+        final json = jsonDecode(frame.payload) as Map<String, dynamic>;
+        final zoneId = MqttTopics.zoneIdFrom(frame.topic);
+        final sensors = json['sensors'] as Map<String, dynamic>?;
+        if (sensors == null) return;
+        state = state.map((z) {
+          if (z.zoneId != zoneId) return z;
+          //* If we receive a sensor reading, the device is definitely online!
+          return z.withSensorJson(sensors).copyWith(isOnline: true);
+        }).toList();
+      }
+    } catch (e, st) {
+      AppLogger.error('ZONE', 'Frame handle failed', e, st);
+    }
+  }
+
+  //* Closes all valves instantly
+  //* Used primarily during emergency stops (does NOT force devices offline)
   void setAllZonesOffline() {
     state = state.map((zone) {
-      return zone.copyWith(
-        isOnline: false,
-        isValveOpen: false,
-      );
+      return zone.copyWith(isValveOpen: false);
     }).toList();
   }
 }

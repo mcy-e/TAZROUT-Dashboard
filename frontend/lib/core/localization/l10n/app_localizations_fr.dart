@@ -229,48 +229,48 @@ class AppLocalizationsFr extends AppLocalizations {
   String get supportGetSupport => 'Obtenir de l aide';
 
   @override
-  String get faqOfflineTitle => 'Système hors ligne ?';
+  String get faqOfflineTitle => 'Capteurs hors ligne ?';
 
   @override
   String get faqOfflineDesc =>
-      'Si les zones semblent hors ligne, vérifiez l alimentation principale et que la passerelle est connectée au réseau.';
+      'Si des zones semblent hors ligne, vérifiez l\'alimentation du nœud ESP32 et la connexion LoRa.';
 
   @override
   String get faqErraticTitle => 'Mesures erratiques ?';
 
   @override
   String get faqErraticDesc =>
-      'Un étalonnage des capteurs peut être nécessaire. Ouvrez l onglet Zones pour lancer un diagnostic sur des capteurs précis.';
+      'Étalonnage requis. Vérifiez si les sondes d\'humidité et de température sont endommagées.';
 
   @override
-  String get faqSyncTitle => 'Données non synchronisées ?';
+  String get faqSyncTitle => 'Tableau déconnecté ?';
 
   @override
   String get faqSyncDesc =>
-      'Assurez-vous que votre connexion Internet est stable. Les données sont mises en cache localement puis synchronisées.';
+      'Vérifiez votre connexion LAN au serveur central. Le système fonctionne sans Internet.';
 
   @override
-  String get faqAccessTitle => 'Accès refusé ?';
+  String get faqAccessTitle => 'Arrêt d\'urgence ?';
 
   @override
   String get faqAccessDesc =>
-      'Contactez votre administrateur pour vérifier vos droits si vous ne pouvez pas accéder à certaines commandes.';
+      'Le tableau de bord est en lecture seule. Utilisez l\'arrêt d\'urgence uniquement en cas de panne.';
 
   @override
   String get faqOfflineDetailed =>
-      'Vérifiez que tous les contrôleurs de zone sont sous tension et connectés à la passerelle principale. Vérifiez que le routeur réseau est actif et que le voyant de la passerelle est vert. Si le problème persiste, redémarrez la passerelle et attendez 60 secondes avant de vérifier à nouveau.';
+      'Assurez-vous que tous les contrôleurs ESP32 sont sous tension et à portée de la passerelle LoRa. Vérifiez que la passerelle Raspberry Pi est active et publie sur le broker Mosquitto (port 1883).';
 
   @override
   String get faqErraticDetailed =>
-      'La dérive du capteur peut être causée par des dommages physiques, une infiltration d humidité ou une perte d étalonnage. Accédez à l onglet Zones, sélectionnez la zone concernée et lancez un diagnostic. Remplacez le capteur si les lectures restent incohérentes après l étalonnage.';
+      'La dérive du capteur peut être causée par des dommages physiques ou une infiltration d\'eau. Inspectez les capteurs. Le moteur IA nécessite une télémétrie précise pour prendre des décisions d\'irrigation optimales.';
 
   @override
   String get faqSyncDetailed =>
-      'Vérifiez que votre connexion Internet est active. Le système met les données en cache localement et se synchronisera automatiquement une fois la connexion rétablie. Si la synchronisation ne reprend pas dans les 5 minutes suivant la reconnexion, redémarrez l application du tableau de bord.';
+      'Tazrout est un système LAN uniquement et ne nécessite pas Internet. Vérifiez que votre appareil est sur le même réseau local que le serveur central et que le backend Spring Boot fonctionne.';
 
   @override
   String get faqAccessDetailed =>
-      'Votre compte peut ne pas avoir les autorisations requises pour cette action. Contactez votre administrateur système pour vérifier et mettre à jour vos droits d accès. N essayez pas de contourner les contrôles d accès.';
+      'Pour éviter les commandes conflictuelles, le tableau de bord est en lecture seule. Le moteur IA autonome contrôle toutes les vannes. L\'arrêt d\'urgence est la seule commande manuelle disponible.';
 
   @override
   String get aiLatestDecisionTitle => 'Dernière décision IA';
@@ -388,10 +388,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get manualFooterMeta =>
-      'Dernière mise à jour : 24 oct. 2024 • Version 2.0';
+      'Dernière mise à jour : 19 avr. 2026 • Version 1.0-BETA';
 
   @override
-  String get manualPdfFileName => 'manuel_v2.0.pdf';
+  String get manualPdfFileName => 'manual_v1.0-BETA.pdf';
 
   @override
   String get emptyStateNoData => 'Aucune donnée disponible';
@@ -524,4 +524,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ok => 'OK';
+
+  @override
+  String get viewAll => 'Voir tout';
 }

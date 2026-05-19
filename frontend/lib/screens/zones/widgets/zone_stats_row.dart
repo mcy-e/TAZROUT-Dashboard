@@ -49,7 +49,7 @@ class ZoneStatsRow extends StatelessWidget {
         const SizedBox(height: 4),
         _buildStatRow(
           l10n.zoneStatsWaterLabel,
-          isOnline ? '${(waterLevel * 100).toStringAsFixed(0)}%' : '-',
+          isOnline ? '${waterLevel.toStringAsFixed(0)}%' : '-',
           context,
           isDark,
         ),

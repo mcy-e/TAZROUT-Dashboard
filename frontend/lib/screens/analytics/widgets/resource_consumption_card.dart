@@ -6,50 +6,45 @@
 //& Imports
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../../widgets/common/empty_state_widget.dart';
+import '../../../../providers/analytics_provider.dart';
+import '../../../../providers/zone_provider.dart';
 
 //& ResourceConsumptionCard Widget
-class ResourceConsumptionCard extends StatefulWidget {
+class ResourceConsumptionCard extends ConsumerStatefulWidget {
   //* StatefulWidget — stacked bar chart + working period toggle
   const ResourceConsumptionCard({super.key});
 
   @override
-  State<ResourceConsumptionCard> createState() => _ResourceConsumptionCardState();
+  ConsumerState<ResourceConsumptionCard> createState() => _ResourceConsumptionCardState();
 }
 
-class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
+class _ResourceConsumptionCardState extends ConsumerState<ResourceConsumptionCard> {
   String _selectedPeriod = 'Week';
-
-  static const Map<String, List<List<double>>> _periodData = {
-    'Day': [
-      [15, 20, 10],
-      [12, 18, 15],
-      [20, 10, 12],
-    ],
-    'Week': [
-      [30, 40, 20],
-      [25, 35, 30],
-      [40, 20, 25],
-    ],
-    'Month': [
-      [90, 110, 60],
-      [75, 95, 80],
-      [110, 60, 70],
-    ],
-  };
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final zoneData = _periodData[_selectedPeriod] ?? [];
-    final maxY = zoneData.isEmpty
+    
+    final analyticsState = ref.watch(analyticsProvider);
+    final zones = ref.watch(zonesProvider);
+    final allZoneData = analyticsState.currentConsumption;
+    final allLabels = analyticsState.currentConsumptionLabels;
+
+    // Preview: first 3 zones only
+    final previewData = allZoneData.take(3).toList();
+    final previewLabels = allLabels.take(3).toList();
+    final previewZones = zones.take(3).toList();
+
+    final maxY = previewData.isEmpty
         ? 10.0
-        : zoneData
+        : previewData
             .map((zone) => zone[0] + zone[1] + zone[2])
             .reduce((a, b) => a > b ? a : b) *
             1.2;
@@ -70,15 +65,18 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            //* Header Row: Title + Period Toggle
+            //* Header Row: Title + Period Toggle + See All
             Row(
               children: isArabic(context)
                   ? [
+                      TextButton(
+                        onPressed: () => _showAllZonesDialog(context, isDark, l10n, allZoneData, allLabels),
+                        child: Text(l10n.viewAll, style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                      ),
                       _PeriodToggle(
                         selectedPeriod: _selectedPeriod,
                         l10n: l10n,
-                        onPeriodChanged: (period) =>
-                            setState(() => _selectedPeriod = period),
+                        onPeriodChanged: (period) => setState(() => _selectedPeriod = period),
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -87,9 +85,7 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
                           textAlign: TextAlign.right,
                           textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.headingXS.copyWith(
-                            color: isDark
-                                ? AppColors.darkPrimaryText
-                                : AppColors.lightPrimaryText,
+                            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -103,9 +99,7 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
                           textAlign: TextAlign.left,
                           textDirection: textDirectionForUiLocale(context),
                           style: AppTypography.headingXS.copyWith(
-                            color: isDark
-                                ? AppColors.darkPrimaryText
-                                : AppColors.lightPrimaryText,
+                            color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
@@ -115,74 +109,83 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
                       _PeriodToggle(
                         selectedPeriod: _selectedPeriod,
                         l10n: l10n,
-                        onPeriodChanged: (period) =>
-                            setState(() => _selectedPeriod = period),
+                        onPeriodChanged: (period) {
+                          setState(() => _selectedPeriod = period);
+                          ref.read(analyticsProvider.notifier).setConsumptionPeriod(period.toLowerCase());
+                        },
+                      ),
+                      TextButton(
+                        onPressed: () => _showAllZonesDialog(context, isDark, l10n, allZoneData, allLabels),
+                        child: Text(l10n.viewAll, style: TextStyle(color: AppColors.primary, fontSize: 12)),
                       ),
                     ],
             ),
             const SizedBox(height: 16),
-            //* Stacked Bar Chart
+            //* Stacked Bar Chart — first 3 zones only
             Expanded(
-              child: zoneData.isEmpty
+              child: previewData.isEmpty
                   ? EmptyStateWidget(message: l10n.emptyStateNoData)
-                  : BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        maxY: maxY,
-                        barTouchData: BarTouchData(enabled: true),
-                        titlesData: FlTitlesData(
-                          show: true,
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                // DATA — zone names from MQTT
-                                const zones = ['Zone A', 'Zone B', 'Zone C'];
-                                final index = value.toInt();
-                                if (index >= 0 && index < zones.length) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text(
-                                      zones[index],
-                                      textDirection: textDirectionForUiLocale(context),
-                                      style: AppTypography.overlineXS.copyWith(
-                                        color: isDark
-                                            ? AppColors.darkMutedText
-                                            : AppColors.lightMutedText,
-                                      ),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
+                  : GestureDetector(
+                      onTap: () => _showAllZonesDialog(context, isDark, l10n, allZoneData, allLabels),
+                      child: BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: maxY,
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (_) => isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard,
+                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                final name = groupIndex < previewZones.length ? previewZones[groupIndex].zoneName : 'Zone ${groupIndex + 1}';
+                                return BarTooltipItem(
+                                  '$name\n${rod.toY.toStringAsFixed(1)} L',
+                                  AppTypography.captionMedium.copyWith(
+                                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                                  ),
+                                );
                               },
-                              reservedSize: 28,
                             ),
                           ),
-                          leftTitles:
-                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles:
-                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles:
-                              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        gridData: const FlGridData(show: false),
-                        borderData: FlBorderData(show: false),
-                        barGroups: [
-                          //* Period-driven static data
-                          // TODO :: Replace with real MQTT data from topic: tazrout/analytics/consumption-by-zone
-                          for (int x = 0; x < zoneData.length; x++)
-                            _buildStackedBar(
-                              x,
-                              zoneData[x][0],
-                              zoneData[x][1],
-                              zoneData[x][2],
+                          titlesData: FlTitlesData(
+                            show: true,
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index >= 0 && index < previewZones.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        previewLabels[index],
+                                        textDirection: textDirectionForUiLocale(context),
+                                        style: AppTypography.overlineXS.copyWith(
+                                          color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                                reservedSize: 28,
+                              ),
                             ),
-                        ],
+                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          ),
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          barGroups: [
+                            for (int x = 0; x < previewData.length; x++)
+                              _buildStackedBar(x, previewData[x][0], previewData[x][1], previewData[x][2]),
+                          ],
+                        ),
                       ),
                     ),
             ),
             const SizedBox(height: 8),
-            //* Row Legend
+            //* Legend
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -194,6 +197,114 @@ class _ResourceConsumptionCardState extends State<ResourceConsumptionCard> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllZonesDialog(
+    BuildContext context,
+    bool isDark,
+    AppLocalizations l10n,
+    List<List<double>> allData,
+    List<String> zoneNames,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: isDark ? AppColors.darkPanelCard : AppColors.lightSurfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(l10n.resourceConsumptionTitle, style: AppTypography.headingS),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 300,
+                child: allData.isEmpty
+                    ? EmptyStateWidget(message: l10n.emptyStateNoData)
+                    : BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: allData
+                              .map((z) => z[0] + z[1] + z[2])
+                              .reduce((a, b) => a > b ? a : b) * 1.2,
+                          barTouchData: BarTouchData(
+                            enabled: true,
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipColor: (_) => isDark ? AppColors.darkHoverSurface : AppColors.lightElevatedCard,
+                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                final name = groupIndex < zoneNames.length ? zoneNames[groupIndex] : 'Zone ${groupIndex + 1}';
+                                return BarTooltipItem(
+                                  '$name\n${rod.toY.toStringAsFixed(1)} L',
+                                  AppTypography.captionMedium.copyWith(
+                                    color: isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            show: true,
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index >= 0 && index < zoneNames.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        zoneNames[index],
+                                        style: AppTypography.overlineXS.copyWith(
+                                          color: isDark ? AppColors.darkMutedText : AppColors.lightMutedText,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                                reservedSize: 28,
+                              ),
+                            ),
+                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          ),
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          barGroups: [
+                            for (int x = 0; x < allData.length; x++)
+                              _buildStackedBar(x, allData[x][0], allData[x][1], allData[x][2]),
+                          ],
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildLegendItem(context, AppColors.series2Blue, l10n.legendWaterShort),
+                  const SizedBox(width: 16),
+                  _buildLegendItem(context, AppColors.primary, l10n.legendMoistureShort),
+                  const SizedBox(width: 16),
+                  _buildLegendItem(context, AppColors.errorSolid, l10n.legendTempShort),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

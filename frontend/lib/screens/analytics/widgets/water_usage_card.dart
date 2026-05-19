@@ -5,30 +5,26 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/localization/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/locale_text_direction.dart';
+import '../../../../providers/analytics_provider.dart';
 import '../../../../widgets/common/empty_state_widget.dart';
 
 //& WaterUsageCard Widget
-class WaterUsageCard extends StatefulWidget {
+class WaterUsageCard extends ConsumerStatefulWidget {
   const WaterUsageCard({super.key});
 
   @override
-  State<WaterUsageCard> createState() => _WaterUsageCardState();
+  ConsumerState<WaterUsageCard> createState() => _WaterUsageCardState();
 }
 
-class _WaterUsageCardState extends State<WaterUsageCard> {
+class _WaterUsageCardState extends ConsumerState<WaterUsageCard> {
   String _selectedPeriod = 'Month';
-
-  static const Map<String, List<double>> _periodData = {
-    'Day': [20, 35, 28, 42, 38],
-    'Week': [120, 180, 150, 200, 170],
-    'Month': [480, 620, 550, 410, 700],
-  };
 
   List<String> _labelsForPeriod(BuildContext context, String period) {
     final locale = Localizations.localeOf(context).toString();
@@ -55,9 +51,11 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final data = _periodData[_selectedPeriod] ?? [];
-    final labels = _labelsForPeriod(context, _selectedPeriod);
-    final maxY = data.isEmpty ? 10.0 : data.reduce((a, b) => a > b ? a : b) * 1.2;
+    final analyticsState = ref.watch(analyticsProvider);
+
+    final data = analyticsState.currentWaterUsage;
+    final labels = analyticsState.currentWaterLabels;
+    final maxY = data.isEmpty ? 10.0 : (data.reduce((a, b) => a > b ? a : b) * 1.2).clamp(10.0, double.infinity);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -87,7 +85,10 @@ class _WaterUsageCardState extends State<WaterUsageCard> {
                 _PeriodToggle(
                   selectedPeriod: _selectedPeriod,
                   l10n: l10n,
-                  onPeriodChanged: (period) => setState(() => _selectedPeriod = period),
+                  onPeriodChanged: (period) {
+                    setState(() => _selectedPeriod = period);
+                    ref.read(analyticsProvider.notifier).setWaterPeriod(period.toLowerCase());
+                  },
                 ),
               ],
             ),

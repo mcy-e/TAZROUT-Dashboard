@@ -511,13 +511,13 @@ abstract class AppLocalizations {
   /// No description provided for @faqOfflineTitle.
   ///
   /// In en, this message translates to:
-  /// **'System Offline?'**
+  /// **'Sensors Offline?'**
   String get faqOfflineTitle;
 
   /// No description provided for @faqOfflineDesc.
   ///
   /// In en, this message translates to:
-  /// **'If zones appear offline, check the main power supply and ensure the gateway is connected to the network.'**
+  /// **'If zones appear offline, verify the ESP32 node power supply and LoRa gateway connection.'**
   String get faqOfflineDesc;
 
   /// No description provided for @faqErraticTitle.
@@ -529,55 +529,55 @@ abstract class AppLocalizations {
   /// No description provided for @faqErraticDesc.
   ///
   /// In en, this message translates to:
-  /// **'Sensor calibration may be required. Visit the Zones tab to run a diagnostic test on specific sensors.'**
+  /// **'Sensor calibration required. Check soil moisture and temperature probes for physical damage.'**
   String get faqErraticDesc;
 
   /// No description provided for @faqSyncTitle.
   ///
   /// In en, this message translates to:
-  /// **'Data Not Syncing?'**
+  /// **'Dashboard Disconnected?'**
   String get faqSyncTitle;
 
   /// No description provided for @faqSyncDesc.
   ///
   /// In en, this message translates to:
-  /// **'Ensure your internet connection is stable. Data will cache locally and sync once connection is restored.'**
+  /// **'Verify your LAN connection to the central server. The system operates entirely offline.'**
   String get faqSyncDesc;
 
   /// No description provided for @faqAccessTitle.
   ///
   /// In en, this message translates to:
-  /// **'Access Denied?'**
+  /// **'Emergency Override?'**
   String get faqAccessTitle;
 
   /// No description provided for @faqAccessDesc.
   ///
   /// In en, this message translates to:
-  /// **'Contact your administrator to verify your permissions settings if you cannot access certain controls.'**
+  /// **'The dashboard is read-only. Only use the Emergency Stop button during critical failures.'**
   String get faqAccessDesc;
 
   /// No description provided for @faqOfflineDetailed.
   ///
   /// In en, this message translates to:
-  /// **'Check that all zone controllers are powered on and connected to the main gateway. Verify the network router is active and the gateway LED is green. If the issue persists, restart the gateway and wait 60 seconds before checking again.'**
+  /// **'Ensure all ESP32 zone controllers are powered on and within range of the LoRa gateway. Verify the Raspberry Pi gateway is active and publishing to the Mosquitto broker on port 1883.'**
   String get faqOfflineDetailed;
 
   /// No description provided for @faqErraticDetailed.
   ///
   /// In en, this message translates to:
-  /// **'Sensor drift may be caused by physical damage, moisture ingress, or calibration loss. Navigate to the Zones tab, select the affected zone, and run a diagnostic. Replace the sensor if readings remain inconsistent after calibration.'**
+  /// **'Sensor drift may be caused by physical damage, water ingress, or soil displacement. Inspect the sensors in the affected zone. The AI Engine requires accurate telemetry to make optimal irrigation decisions.'**
   String get faqErraticDetailed;
 
   /// No description provided for @faqSyncDetailed.
   ///
   /// In en, this message translates to:
-  /// **'Verify your internet connection is active. The system caches data locally and will sync automatically once connection is restored. If syncing does not resume within 5 minutes of reconnecting, restart the dashboard application.'**
+  /// **'Tazrout is a LAN-only system and does not require internet. Verify your device is on the same local network as the central server. Check that the Spring Boot backend WebSocket bridge is running on port 8085.'**
   String get faqSyncDetailed;
 
   /// No description provided for @faqAccessDetailed.
   ///
   /// In en, this message translates to:
-  /// **'Your account may lack the required permissions for this action. Contact your system administrator to review and update your access rights. Do not attempt to bypass access controls.'**
+  /// **'To prevent conflicting commands, the Flutter dashboard is designed as a read-only monitoring interface. The Python AI Engine autonomously controls all valves. The Emergency Stop function is the only manual override available.'**
   String get faqAccessDetailed;
 
   /// No description provided for @aiLatestDecisionTitle.
@@ -799,13 +799,13 @@ abstract class AppLocalizations {
   /// No description provided for @manualFooterMeta.
   ///
   /// In en, this message translates to:
-  /// **'Last updated: Oct 24, 2024 • Version 2.0'**
+  /// **'Last updated: Apr 19, 2026 • Version 1.0-BETA'**
   String get manualFooterMeta;
 
   /// No description provided for @manualPdfFileName.
   ///
   /// In en, this message translates to:
-  /// **'manual_v2.0.pdf'**
+  /// **'manual_v1.0-BETA.pdf'**
   String get manualPdfFileName;
 
   /// No description provided for @emptyStateNoData.
@@ -1065,6 +1065,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get ok;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
 }
 
 class _AppLocalizationsDelegate
