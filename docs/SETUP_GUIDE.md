@@ -1,67 +1,37 @@
-# Tazrout Backend — Setup Guide
+# Tazrout System — Full Hardware Setup & Deployment Guide
 
 **Project**: Tazrout Smart Irrigation Dashboard
-**Date**: 2026-04-19
+**Date**: 2026-04-30
+**Target**: Production Server (Hardware Deployment Phase)
 
-**This will be implemented only when everything is finished ie when the connection phase arrives.**
+This guide is designed for the final phase of the project: deploying the software stack to the central server and connecting the physical field hardware (LoRa gateways, AI engine, and Flutter dashboard).
+
+**Important Note on Hardware vs. Simulator:**
+Because the entire system communicates exclusively via MQTT, **the backend and frontend do not care whether the data comes from the Python simulator or the real hardware**. As long as your physical LoRa Gateway and Mr. Salah's AI Engine publish to the exact same MQTT topics with the exact same JSON format (as documented in `MQTT_TOPICS.md`), everything will work exactly as it does now.
 
 ---
 
-## Prerequisites
+## Prerequisites (Central Server)
 
-**Should be Present**
-Install all of the following on the development machine or Raspberry Pi:
+Install all of the following on the central server machine:
 
 | Tool            | Minimum Version | Purpose                              | Install Command (Debian/Ubuntu)              |
 |-----------------|-----------------|--------------------------------------|----------------------------------------------|
 | Java JDK        | 17+             | Spring Boot runtime                  | `sudo apt install openjdk-17-jdk`            |
-| Maven           | 3.8+            | Build tool                           | `sudo apt install maven`                     |
 | PostgreSQL      | 15+             | Database                             | `sudo apt install postgresql postgresql-contrib` |
-| Python          | 3.10+           | Mock data simulator                  | `sudo apt install python3 python3-pip`       |
-| paho-mqtt (pip) | 1.6+            | Python MQTT client for simulator     | `pip3 install paho-mqtt`                     |
+| Mosquitto MQTT  | 2.0+            | Local Message Broker                 | `sudo apt install mosquitto mosquitto-clients`|
+| Python          | 3.11            | AI Engine & Simulation Scripts       | `sudo apt install python3.11`                |
 
-**Note:** The Mosquitto MQTT broker is installed and managed by networking dev .
-You do not need to install or configure Mosquitto yourself.
-
----
-
-## Step 1 — Clone and Branch
-
-```bash
-git clone https://github.com/mcy-e/TAZROUT-Dashboard
-cd TAZROUT-Dashboard
-
-git checkout -b backend/spring-boot-setup
-```
-
-All backend work happens inside the `backend/` directory.
+**Network Configuration:**
+Ensure the central server has a static LAN IP address (e.g., `192.168.1.100`). All field hardware (LoRa Gateway) and the AI Engine will need this IP to connect to the MQTT broker.
 
 ---
 
-## Step 2 — Configure application.properties
+## Step 1 — PostgreSQL Database Setup
 
-Edit `backend/src/main/resources/application.properties`:
+The backend requires the database to exist before it boots.
 
-| Property                         | Description                              | Example Value                              |
-|----------------------------------|------------------------------------------|--------------------------------------------|
-| `server.port`                    | Spring Boot server port                  | `8080`                                     |
-| `spring.datasource.url`         | PostgreSQL JDBC connection URL           | `jdbc:postgresql://localhost:5432/tazrout`  |
-| `spring.datasource.username`    | Database username                        | `tazrout_user`                             |
-| `spring.datasource.password`    | Database password                        | `your_secure_password`                     |
-| `mqtt.broker.url`               | Mosquitto broker address (from Mr. Lhacani) | `tcp://192.168.1.100:1883`              |
-| `mqtt.client.id`                | MQTT client identifier                   | `tazrout-backend`                          |
-| `mqtt.default.qos`              | Default MQTT QoS level                   | `1`                                        |
-| `mqtt.connection.timeout`       | Broker connection timeout (sec)          | `30`                                       |
-| `mqtt.keep.alive.interval`      | MQTT keep-alive interval (sec)           | `60`                                       |
-| `websocket.endpoint`            | WebSocket path for Flutter               | `/api/v1/ws/realtime`                      |
-| `websocket.allowed.origins`     | Allowed WebSocket origins                | `*` (LAN only, safe)                      |
-| `gateway.heartbeat.timeout.seconds` | Seconds before marking gateway offline | `90`                                    |
-
----
-
-## Step 3 — PostgreSQL Database Setup
-
-### Create the database and user
+### 1. Create the database and user
 
 ```bash
 sudo -u postgres psql
@@ -74,177 +44,107 @@ GRANT ALL PRIVILEGES ON DATABASE tazrout TO tazrout_user;
 \q
 ```
 
-### Run the schema
+### 2. Run the schema
+
+Navigate to your cloned repository:
 
 ```bash
-cd backend/
+cd TAZROUT-Dashboard/backend/
 psql -U tazrout_user -d tazrout -f src/main/resources/schema.sql
 ```
 
-### Verify tables
+---
 
-```bash
-psql -U tazrout_user -d tazrout -c "\dt"
-```
+## Step 2 — Configure the Backend
 
-Expected output:
+Edit `backend/src/main/resources/application.properties` to ensure it points to your local Mosquitto broker and the newly created database:
 
-```
-           List of relations
- Schema |       Name        | Type  |    Owner
---------+-------------------+-------+-------------
- public | zones             | table | tazrout_user
- public | sensor_readings   | table | tazrout_user
- public | ai_decisions      | table | tazrout_user
- public | user_preferences  | table | tazrout_user
+```properties
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/tazrout
+spring.datasource.username=tazrout_user
+spring.datasource.password=your_secure_password
+
+# MQTT Broker (Running locally on the server)
+mqtt.broker.url=tcp://localhost:1883
+mqtt.client.id=tazrout-backend
+# Uncomment and set if Mosquitto requires auth:
+# mqtt.username=tazrout_backend
+# mqtt.password=change_me
 ```
 
 ---
 
-## Step 4 — Verify MQTT Broker Connectivity
+## Step 3 — Boot the Infrastructure
 
+Start the software components in the following order:
 
-The broker is managed by Mr. Lhacani. Verify you can connect:
-
-```bash
-# Test subscription (in one terminal)
-mosquitto_sub -h <BROKER_IP> -t "tazrout/#" -v
-
-# Test publish (in another terminal)
-mosquitto_pub -h <BROKER_IP> -t "tazrout/test" -m "hello from backend"
-```
-
-You should see `tazrout/test hello from backend` in the subscriber terminal.
-If this fails, contact Mr. Lhacani for broker status and credentials.
-
----
-
-## Step 5 — Build and Run the Backend
+### 1. Start the Spring Boot Backend
 
 ```bash
 cd backend/
-
 mvn clean install
-
 mvn spring-boot:run
 ```
 
-### Verify the backend is running
+Wait until you see in the console:
+`Started TazroutApplication in X seconds`
+`MQTT connected to broker: tcp://localhost:1883`
 
-Check the console output for:
+### 2. Turn on Field Hardware (LoRa Gateway & Nodes)
 
-```
-Started TazroutApplication in X seconds
-MQTT connected to broker: tcp://<BROKER_IP>:1883
-WebSocket endpoint registered: /api/v1/ws/realtime
-```
+Power on your physical LoRa Gateway.
+Ensure the gateway is configured to publish its MQTT packets to the central server's IP (e.g., `192.168.1.100:1883`).
+Once powered, the gateway will immediately begin transmitting `SENSOR_READING` packets to `tazrout/zones/{zoneId}/sensors`.
+**The backend will automatically detect new zones and save them to the database.**
 
----
+### 3. Turn on the AI Engine
 
-## Step 6 — Run the Mock Data Simulator
-
-The simulator replaces both the LoRa Gateway and the AI Engine — it
-publishes fake sensor data, AI decisions, valve commands, and heartbeats
-so you can test the full system without hardware.
-
-```bash
-cd backend/mock_data/
-
-python3 mqtt_simulator.py --broker <BROKER_IP> --port 1883 --zones 7 --interval 30
-```
-
-### Simulator options
-
-| Flag         | Default          | Description                                |
-|--------------|------------------|--------------------------------------------|
-| `--broker`   | `localhost`      | Mosquitto broker IP (from Mr. Lhacani)     |
-| `--port`     | `1883`           | Mosquitto broker port                      |
-| `--zones`    | `7`              | Number of zones to simulate                |
-| `--interval` | `30`             | Seconds between sensor publishes           |
-
-The simulator will:
-- Publish `SENSOR_READING` packets every `--interval` seconds per zone
-- Publish `HEARTBEAT` packets every 30 seconds
-- Randomly flip zones between ONLINE and OFFLINE (`DEVICE_STATE_CHANGE`)
-- Generate `AI_DECISION` packets when moisture drops below threshold
-- Publish `VALVE_COMMAND` packets linked to AI decisions
-- Simulate `COMMAND_ACK` responses from MCUs
-- Publish `EMERGENCY_ALERT` on critical thresholds
+Have Mr. Salah start the AI Engine.
+Ensure it connects to the same central server IP (`192.168.1.100:1883`).
+It will begin listening to the sensor readings and publishing `AI_DECISION` packets to `tazrout/ai/decisions`.
 
 ---
 
-## Step 7 — Connect Flutter Frontend
+## Step 4 — Launch the Flutter Dashboard
 
-On the development machine running the Flutter desktop app:
+The dashboard is the final piece. Because it runs on the exact same server machine, it can connect via `localhost`.
 
+### 1. Verify Environment
+
+Ensure your `frontend/.env` file points to the local backend:
+
+```env
+WEBSOCKET_URL=ws://localhost:8080/api/v1/ws/realtime
 ```
-WEBSOCKET_URL=ws://<BACKEND_IP>:8080/api/v1/ws/realtime
-```
+
+### 2. Run the App
 
 ```bash
 cd frontend/
 flutter run -d windows
 ```
 
-The dashboard connects to the WebSocket endpoint and receives real-time
-data from either the mock simulator or real hardware.
+As soon as the dashboard opens, it will connect to the backend WebSocket. You will instantly see all the physical zones populating on the screen, reflecting the live data streaming from your actual hardware.
 
 ---
 
-## Troubleshooting
+## Troubleshooting the Hardware Switch
 
-| Problem                              | Solution                                                       |
-|--------------------------------------|----------------------------------------------------------------|
-| `Connection refused` on MQTT         | Contact Mr. Lhacani — check broker is running                  |
-| `Connection refused` on PostgreSQL   | Check PostgreSQL is running: `systemctl status postgresql`      |
-| MQTT messages not reaching Flutter   | Verify MqttWebSocketBridge subscribes to `tazrout/#`           |
-| Database tables missing              | Re-run `schema.sql` against the `tazrout` database             |
-| `Port 8080 already in use`           | Change `server.port` in `application.properties`               |
-| Simulator not publishing             | Check `--broker` IP matches the broker Mr. Lhacani set up      |
-| Flutter shows no data                | Check WebSocket URL matches backend IP and port                |
-| No gateway heartbeat                 | Simulator not running, or `--broker` IP is wrong               |
+If data isn't showing up on the dashboard after switching from the simulator to real hardware:
 
----
+1.  **Check MQTT Connectivity:**
+    On the central server, listen to the broker to see if the hardware is actually sending data:
+    `mosquitto_sub -h localhost -t "tazrout/#" -v`
+    If you see nothing, the physical Gateway is not reaching the server's network.
 
-## Network Diagram (LAN)
+2.  **Check JSON Formatting:**
+    If you see packets in `mosquitto_sub`, but the dashboard is empty, your hardware is sending the wrong JSON keys. Compare the packets from the physical hardware directly against the `MQTT_TOPICS.md` definitions. **Field names must be exactly the same (e.g., `soil_moisture` not `Moisture`).**
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    LAN (192.168.1.0/24)                  │
-│                                                          │
-│  ┌────────────────┐                                      │
-│  │ ESP32 Nodes    │──LoRa──┐                             │
-│  │ (Field)        │        │                             │
-│  └────────────────┘        ▼                             │
-│                   ┌────────────────────────┐              │
-│                   │ Raspberry Pi Gateway   │              │
-│                   │ + LoRa HAT             │              │
-│                   │ 192.168.1.x            │              │
-│                   └──────────┬─────────────┘              │
-│                              │ TCP/IP                     │
-│                              ▼                            │
-│                   ┌────────────────────────┐              │
-│                   │ MQTT Broker (Mosquitto)│              │
-│                   │ (managed by Mr. Lhacani)│             │
-│                   │ 192.168.1.100:1883     │              │
-│                   └──┬──────────────┬──────┘              │
-│                      │              │                     │
-│           ┌──────────┘              └──────────┐          │
-│           ▼                                    ▼          │
-│  ┌────────────────┐              ┌────────────────────┐   │
-│  │ AI Engine      │              │ Spring Boot Backend│   │
-│  │ (co-located)   │              │ :8080              │   │
-│  │                │              │ + PostgreSQL :5432  │   │
-│  └────────────────┘              │ + WebSocket :8080/ws│  │
-│                                  └─────────┬──────────┘   │
-│                                            │ WebSocket    │
-│                                            ▼              │
-│                                  ┌────────────────────┐   │
-│                                  │ Desktop PC         │   │
-│                                  │ Flutter Dashboard  │   │
-│                                  │ (read-only)        │   │
-│                                  └────────────────────┘   │
-│                                                          │
-│  ❌ No Internet Gateway                                   │
-└──────────────────────────────────────────────────────────┘
-```
+3.  **Check AI Engine Logs:**
+    If zones are updating but valves are never opening, check if the AI Engine is publishing to `tazrout/zones/{zoneId}/valve/command`.
+
+## Single-Server Architecture
+
+Remember that this is a **LAN-only system**.
+There is no internet connection required. The AI, Backend, DB, Broker, and Flutter UI all live on one machine. Only the LoRa Gateway communicates across the local area network.
