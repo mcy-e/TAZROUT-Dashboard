@@ -214,6 +214,9 @@ abstract class AppAssets {
   static const String lightIconManual = 'assets/icons/Light/svg/app_icons/variant=Manual.svg';
   static const String lightIconCalendar = 'assets/icons/Light/svg/app_icons/variant=Calendar.svg';
 
+  //& Support Icons
+  static const String supportQrCode = 'assets/icons/QRCode.svg';
+
   //& Chart Preview Images
   //? Static graph preview images per sensor type and theme
 

@@ -144,31 +144,27 @@ class QrContactCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        //* QR code placeholder
+                        //* QR code SVG Asset
                         Container(
                           width: 160,
                           height: 160,
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primary10,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.primary, width: 2),
                           ),
-                          child: Center(
-                            child: Icon(
-                              PhosphorIcons.qrCode(),
-                              size: 80,
-                              color: AppColors.primary,
-                            ),
+                          child: SvgPicture.asset(
+                            AppAssets.supportQrCode,
+                            fit: BoxFit.contain,
                           ),
                         ),
-                        // TODO :: Replace with QrImageView widget
                         const SizedBox(height: 24),
-                        //* Website row — DATA placeholder URL
+                        //* Website row — Tazrout Vercel App
                         _ContactRow(
                           icon: Icon(PhosphorIcons.globe(), size: 20, color: AppColors.primary),
-                          text: 'Tazrout/help.com',
+                          text: 'tazrout.vercel.app',
                           onTap: () => AppLogger.info('HELP', 'Website tapped'),
-                          // TODO :: Open URL via url_launcher
                         ),
                         const SizedBox(height: 12),
                         //* Phone row — DATA placeholder

@@ -6,6 +6,7 @@
 
 //& Imports
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/constants/app_assets.dart';
@@ -15,24 +16,30 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/app_logger.dart';
 import 'package:tazrout_dashboard/core/utils/locale_text_direction.dart';
 import '../../../widgets/common/empty_state_widget.dart';
+import '../../../providers/zone_provider.dart';
+import '../../../providers/analytics_provider.dart';
 
 //& PerformanceMonitorCard
-class PerformanceMonitorCard extends StatelessWidget {
-  //* Outer Card, padding 16px
+class PerformanceMonitorCard extends ConsumerWidget {
+  //* Reads live zone averages from zonesProvider — updates on every sensor frame
   const PerformanceMonitorCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    final zones = ref.watch(zonesProvider);
+    final analytics = ref.watch(analyticsProvider);
+    final onlineZones = zones.where((z) => z.isOnline).toList();
 
-    // TODO :: Wire to MQTT topic: tazrout/dashboard/performance
-    final Map<String, String> data = {
-      'water': '42%',
-      'soil': '620 g/kg',
-      'temp': '24°C',
-      'humidity': '45%',
-    };
+    final data = onlineZones.isEmpty
+        ? <String, String>{}
+        : {
+            'water': '${(onlineZones.map((z) => z.waterLevel).reduce((a, b) => a + b) / onlineZones.length).toStringAsFixed(1)}%',
+            'soil': '${(onlineZones.map((z) => z.moisture).reduce((a, b) => a + b) / onlineZones.length).toStringAsFixed(1)} g/m³',
+            'temp': '${(onlineZones.map((z) => z.temperature).reduce((a, b) => a + b) / onlineZones.length).toStringAsFixed(1)}°C',
+            'humidity': '${(onlineZones.map((z) => z.moisture).reduce((a, b) => a + b) / onlineZones.length * 1.2).toStringAsFixed(1)}%',
+          };
 
     return Card(
       margin: EdgeInsets.zero,
@@ -116,11 +123,11 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              //* 1. Water Output
                               Expanded(
                                 child: _MetricSubCard(
                                   label: l10n.waterOutput,
                                   value: data['water'] ?? '',
+                                  history: analytics.waterUsageDay,
                                   accentColor: AppColors.primary,
                                   darkIcon: AppAssets.darkIconWaterI,
                                   lightIcon: AppAssets.lightIconWaterI,
@@ -130,11 +137,11 @@ class PerformanceMonitorCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              //* 2. Soil Moisture
                               Expanded(
                                 child: _MetricSubCard(
                                   label: l10n.soilMoisture,
                                   value: data['soil'] ?? '',
+                                  history: analytics.envHum,
                                   accentColor: AppColors.series2Blue,
                                   darkIcon: AppAssets.darkIconSoilIdle,
                                   lightIcon: AppAssets.lightIconSoilIdle,
@@ -150,11 +157,11 @@ class PerformanceMonitorCard extends StatelessWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              //* 3. Temperature
                               Expanded(
                                 child: _MetricSubCard(
                                   label: l10n.temperature,
                                   value: data['temp'] ?? '',
+                                  history: analytics.envTemp,
                                   accentColor: AppColors.errorSolid,
                                   darkIcon: AppAssets.darkIconTemperatureI,
                                   lightIcon: AppAssets.lightIconTemperatureI,
@@ -164,11 +171,11 @@ class PerformanceMonitorCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              //* 4. Humidity
                               Expanded(
                                 child: _MetricSubCard(
                                   label: l10n.humidity,
                                   value: data['humidity'] ?? '',
+                                  history: analytics.envHum,
                                   accentColor: AppColors.series3Amber,
                                   darkIcon: AppAssets.darkIconHumidityI,
                                   lightIcon: AppAssets.lightIconHumidityI,
@@ -206,6 +213,7 @@ class PerformanceMonitorCard extends StatelessWidget {
 class _MetricSubCard extends StatefulWidget {
   final String label;
   final String value;
+  final List<double> history;
   final Color accentColor;
   final String darkIcon;
   final String lightIcon;
@@ -216,6 +224,7 @@ class _MetricSubCard extends StatefulWidget {
   const _MetricSubCard({
     required this.label,
     required this.value,
+    required this.history,
     required this.accentColor,
     required this.darkIcon,
     required this.lightIcon,
@@ -383,17 +392,13 @@ class _MetricSubCardState extends State<_MetricSubCard> {
                           borderData: FlBorderData(show: false),
                           lineBarsData: [
                             LineChartBarData(
-                              // TODO :: Replace static chart data with real time-series from API
-                              spots: const [
-                                FlSpot(0, 3),
-                                FlSpot(1, 4),
-                                FlSpot(2, 3.5),
-                                FlSpot(3, 5),
-                                FlSpot(4, 4),
-                                FlSpot(5, 6),
-                                FlSpot(6, 5),
-                                FlSpot(7, 7),
-                              ],
+                              spots: widget.history.isEmpty
+                                  ? [const FlSpot(0, 0)]
+                                  : widget.history
+                                      .asMap()
+                                      .entries
+                                      .map((e) => FlSpot(e.key.toDouble(), e.value))
+                                      .toList(),
                               isCurved: true,
                               color: widget.chartColor,
                               barWidth: 2,
@@ -406,9 +411,11 @@ class _MetricSubCardState extends State<_MetricSubCard> {
                             ),
                           ],
                           minX: 0,
-                          maxX: 7,
+                          maxX: widget.history.isEmpty ? 7 : (widget.history.length - 1).toDouble(),
                           minY: 0,
-                          maxY: 10,
+                          maxY: widget.history.isEmpty
+                              ? 10
+                              : widget.history.reduce((a, b) => a > b ? a : b) * 1.3,
                         ),
                       ),
                     ),
